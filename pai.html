@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#075a6d">
+  <title>Sudoku das Cores — painel do pai</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="pai.css">
+  <link rel="manifest" href="manifest-pai.json">
+  <link rel="apple-touch-icon" href="icone-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Theo (pai)">
+</head>
+<body>
+  <section class="phone parent-screen active" aria-label="Painel do pai">
+    <div class="parent-top"><span class="brand-dots" aria-hidden="true"><i style="--c:var(--blue)"></i><i style="--c:var(--yellow)"></i><i style="--c:var(--green)"></i><i style="--c:var(--purple)"></i></span><b id="titulo">Theo</b><small id="data"></small></div>
+    <div class="parent-body">
+      <div class="p-card" id="parear" hidden><h3>Ligar ao celular do Theo</h3>
+        <p class="p-empty" id="parear-passo">Gere um código e digite no celular do Theo, na tela "Celular do papai".</p>
+        <div class="p-stars" id="codigo" hidden></div>
+        <button class="next p-rec" id="gerar" type="button">Gerar código</button>
+      </div>
+      <div class="p-card" id="cartao-avisos" hidden><h3>Avisos</h3>
+        <p class="p-empty" id="avisos-texto">Receba um aviso quando chegar recado do Theo ou ele terminar o dia.</p>
+        <button class="next p-rec" id="ativar-avisos" type="button">🔔 Ativar avisos</button>
+      </div>
+      <div class="p-card" id="resumo"><p class="p-empty">Nenhum dia concluído ainda.</p></div>
+      <div class="p-card" id="partidas" hidden><h3>Partidas</h3><table><thead><tr><th></th><th>Tempo</th><th>Erros</th></tr></thead><tbody></tbody><tfoot><tr><td>Total</td><td id="total-tempo"></td><td id="total-erros"></td></tr></tfoot></table></div>
+      <div class="p-card" id="cartao-recados"><h3>Recados</h3><div id="recados-theo"></div><p class="p-empty" id="sem-recado">Nenhum recado novo do Theo.</p><button class="next p-rec" id="gravar" type="button">● Gravar recado para o Theo</button><p class="p-note">Cada áudio é apagado 10 s depois de ouvido.</p></div>
+      <div class="p-card" id="historico" hidden></div>
+      <p class="p-note" id="aviso" hidden></p>
+    </div>
+  </section>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="logica.js"></script>
+  <script src="recados.js"></script>
+  <script src="nuvem.js"></script>
+  <script>
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+  (async () => {
+    'use strict';
+    const L = window.Logica, N = window.Nuvem, $ = s => document.querySelector(s);
+    const tempo = ms => { const s = Math.round(ms / 1000); return `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, '0')} s`; };
+    const dataBR = iso => iso.split('-').reverse().slice(0, 2).join('/');
+    const avisar = t => { $('#aviso').textContent = t; $('#aviso').hidden = false; };
+
+    // Simulador (?simulador): sem servidor; lê os dados e recados deste navegador.
+    const simulador = /[?&]simulador\b/.test(location.search);
+    if (!N && !simulador) return avisar('Sem internet. Abra de novo quando tiver conexão.');
+    let eu = { papel: 'pai' };
+    if (!simulador) try { eu = await N.iniciar(); } catch { return avisar('Não consegui falar com o servidor. Tente de novo.'); }
+
+    // Primeira vez: gera o código e espera a criança digitar no celular dela.
+    if (!eu) {
+      document.querySelectorAll('.parent-body > .p-card').forEach(c => { c.hidden = c.id !== 'parear'; });
+      $('#gerar').addEventListener('click', async () => {
+        try {
+          const codigo = N.quemSou() ? await N.novoCodigo() : await N.criarFamilia();
+          $('#codigo').textContent = codigo; $('#codigo').hidden = false;
+          $('#parear-passo').textContent = 'Digite este código no celular do Theo. Vale 15 minutos.';
+          $('#gerar').textContent = 'Gerar outro código';
+        } catch { avisar('Não consegui gerar o código. Tente de novo.'); }
+      });
+      const esperar = setInterval(async () => {
+        if (N.quemSou() && await N.criancaEntrou()) { clearInterval(esperar); location.reload(); }
+      }, 3000);
+      return;
+    }
+    if (eu.papel !== 'pai') return avisar('Este aparelho está ligado como celular do Theo.');
+
+    // Avisos: no iPhone só funcionam com o app aberto pelo ícone da Tela de Início.
+    if (!simulador) {
+      const cartao = $('#cartao-avisos'), botao = $('#ativar-avisos');
+      if (navigator.standalone === false) {
+        cartao.hidden = false; botao.hidden = true;
+        $('#avisos-texto').textContent = 'Para receber avisos: toque em Compartilhar → "Adicionar à Tela de Início" e abra o app pelo ícone.';
+      } else if (N.podeAvisar() && Notification.permission !== 'granted') {
+        cartao.hidden = false;
+        botao.addEventListener('click', async () => {
+          const ok = await N.ativarAvisos(true).catch(() => false);
+          if (ok) cartao.hidden = true;
+          else $('#avisos-texto').textContent = 'Avisos bloqueados. Libere em Ajustes → Notificações → Theo (pai).';
+        });
+      } else N.ativarAvisos(false).catch(() => {}); // já permitido: renova a inscrição em silêncio
+    }
+
+    // Monta, a partir do servidor, o mesmo formato que o app guarda no aparelho.
+    async function carregar() {
+      const [partidas, dias] = await Promise.all([N.lerPartidas(), N.lerDias()]);
+      const porDia = {};
+      partidas.forEach(p => (porDia[p.etapa] ||= []).push({ partida: p.ordem, duracaoMs: p.tempo_ms, erros: p.erros }));
+      const concluidos = dias.map(d => ({ dia: d.etapa, data: L.dataLocal(new Date(d.concluido_em)), partidas: porDia[d.etapa] || [], estrelas: { ...L.estrelas(porDia[d.etapa] || []), total: d.estrelas } }));
+      const aberto = Object.keys(porDia).map(Number).find(e => !dias.some(d => d.etapa === e));
+      return { concluidos, pacote: aberto ? { dia: aberto, partidas: porDia[aberto] } : null };
+    }
+
+    function desenhar(estado) {
+      const dia = estado.concluidos[estado.concluidos.length - 1];
+      $('#resumo').innerHTML = '<p class="p-empty">Nenhum dia concluído ainda.</p>';
+      if (dia) {
+        const e = dia.estrelas;
+        $('#titulo').textContent = `Theo · Dia ${dia.dia}`;
+        $('#data').textContent = dataBR(dia.data);
+        $('#resumo').innerHTML = `<div class="p-stars">${'★'.repeat(e.total)}<span>${'★'.repeat(3 - e.total)}</span></div>
+          <ul class="p-rules"><li class="ok">Concluir · ${dia.partidas.length} de ${L.JOGOS_POR_DIA} jogos</li>
+          <li class="${e.atencao ? 'ok' : 'no'}">Atenção · ${e.erros} erros (até ${L.LIMITE_ERROS})</li>
+          <li class="${e.rapidez ? 'ok' : 'no'}">Rapidez · média ${tempo(e.mediaMs)} (até ${L.LIMITE_MEDIA_MS / 60000} min)</li></ul>`;
+        $('#partidas tbody').innerHTML = dia.partidas.map(p => `<tr><td>Jogo ${p.partida}</td><td>${tempo(p.duracaoMs)}</td><td>${p.erros}</td></tr>`).join('');
+        $('#total-tempo').textContent = tempo(dia.partidas.reduce((s, p) => s + p.duracaoMs, 0));
+        $('#total-erros').textContent = e.erros;
+        $('#partidas').hidden = false;
+      }
+      if (estado.pacote && estado.pacote.partidas.length) {
+        $('#resumo').insertAdjacentHTML('beforeend', `<p class="p-empty">Hoje: ${estado.pacote.partidas.length} de ${L.JOGOS_POR_DIA} jogos feitos.</p>`);
+      }
+      const antigos = estado.concluidos.slice(0, -1).reverse();
+      $('#historico').innerHTML = '<h3>Dias anteriores</h3>' + antigos.map(d => `<div class="p-day"><span>Dia ${d.dia} · ${dataBR(d.data)} · ${d.estrelas.erros} erros · média ${tempo(d.estrelas.mediaMs)}</span><b>${'★'.repeat(d.estrelas.total)}</b></div>`).join('');
+      $('#historico').hidden = !antigos.length;
+    }
+
+    async function listarRecados() {
+      const lista = $('#recados-theo');
+      let recados = [];
+      try { recados = await window.Recados.deQuem('theo'); } catch { /* sem rede */ }
+      lista.replaceChildren();
+      $('#sem-recado').hidden = recados.length > 0;
+      recados.forEach(r => {
+        const linha = document.createElement('div');
+        linha.className = 'msg p-msg';
+        linha.innerHTML = '<span class="avatar">T</span><button class="play-btn" type="button" aria-label="Ouvir recado do Theo">▶</button><span class="wave"><i></i></span><span class="count" aria-hidden="true"></span>';
+        const barra = linha.querySelector('.wave i'), conta = linha.querySelector('.count');
+        linha.querySelector('.play-btn').onclick = () => window.Recados.tocar(r, {
+          aoProgresso: p => { barra.style.width = p * 100 + '%'; },
+          aoContar: s => { conta.textContent = s; conta.style.setProperty('--p', (10 - s) * 10 + '%'); },
+          aoApagar: listarRecados
+        });
+        lista.append(linha);
+      });
+    }
+    let parar = null;
+    $('#gravar').hidden = !window.Recados.podeGravar();
+    $('#gravar').addEventListener('click', async e => {
+      const b = e.currentTarget;
+      if (parar) { try { await parar(); b.textContent = '✓ Recado enviado para o Theo'; } catch { b.textContent = 'Não enviou. Toque para gravar de novo.'; } parar = null; return; }
+      try { parar = await window.Recados.gravar('pai'); b.textContent = '■ Parar e enviar'; }
+      catch { b.textContent = 'Microfone indisponível'; }
+    });
+
+    const local = () => { try { return JSON.parse(localStorage.getItem('sudoku-cores-theo-v2')) || L.estadoInicial(); } catch { return L.estadoInicial(); } };
+    const atualizar = async () => { try { desenhar(simulador ? local() : await carregar()); } catch { avisar('Não consegui carregar os dados.'); } };
+    // Recado apagado depois de ouvido também gera aviso; listar de novo é barato.
+    if (!simulador) N.ouvir(() => { atualizar(); listarRecados(); });
+    atualizar();
+    listarRecados();
+  })();
+  </script>
+</body>
+</html>

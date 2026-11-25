@@ -1,0 +1,174 @@
+// Ligação entre o celular da criança e o do pai (Supabase).
+// Precisa antes: <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+// Também responde como window.Recados (mesma interface de recados.js), então o app.js não muda.
+(function () {
+  'use strict';
+  const URL_SB = 'https://rrsnpcfpvwtfkomhcnxq.supabase.co';
+  const CHAVE = 'sb_publishable_2Cz7vcO6WmRn5LwimC6m_Q_wRqTBBYg'; // pública por natureza; quem protege é o RLS
+  const APAGAR_APOS_OUVIR_MS = 10000;
+
+  // Simulador (?simulador): sem comunicação; recados e dados ficam neste navegador (recados.js).
+  if (/[?&]simulador\b/.test(location.search)) { window.Nuvem = null; return; }
+
+  // Sem internet o CDN não carrega: o jogo segue, só sem recados e sem envio.
+  if (!window.supabase) {
+    window.Nuvem = null;
+    window.Recados = { deQuem: async () => [], podeGravar: () => false };
+    return;
+  }
+
+  // Sessão separada por página: no simulador (mesmo navegador) pai e criança são aparelhos diferentes.
+  const pagina = /pai\.html$/.test(location.pathname) ? 'pai' : 'crianca';
+  const sb = window.supabase.createClient(URL_SB, CHAVE, { auth: { storageKey: `sb-theo-${pagina}` } });
+  const papel = de => (de === 'theo' ? 'crianca' : de); // o app.js chama a criança de 'theo'
+  let eu = null; // { familia_id, papel } ou null se o aparelho ainda não foi pareado
+
+  async function iniciar() {
+    let { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      const r = await sb.auth.signInAnonymously();
+      if (r.error) throw r.error;
+      session = r.data.session;
+    }
+    const { data, error } = await sb.from('membros').select('familia_id, papel').eq('user_id', session.user.id).maybeSingle();
+    if (error) throw error;
+    eu = data;
+    return eu;
+  }
+
+  // Pai: cria a família e recebe o código de 6 dígitos (vale 15 min, uso único).
+  async function criarFamilia() {
+    const { data, error } = await sb.rpc('criar_familia');
+    if (error) throw error;
+    await iniciar();
+    return data;
+  }
+  async function novoCodigo() {
+    const { data, error } = await sb.rpc('novo_codigo');
+    if (error) throw error;
+    return data;
+  }
+  // Pai: a criança já entrou?
+  const criancaEntrou = async () => ((await sb.from('membros').select('papel').eq('papel', 'crianca')).data || []).length > 0;
+
+  // Criança: digita o código mostrado no celular do pai. Devolve true/false.
+  async function entrarFamilia(codigo) {
+    const { data, error } = await sb.rpc('entrar_familia', { p_codigo: String(codigo).trim() });
+    if (error) throw error;
+    if (data) await iniciar();
+    return data;
+  }
+
+  // Criança: manda tudo o que está salvo no aparelho. Repetir não duplica (upsert ignora o que já existe),
+  // então dá para chamar sempre: ao abrir, ao voltar a internet e a cada partida.
+  async function sincronizar(estado) {
+    if (!eu || eu.papel !== 'crianca') return;
+    const f = eu.familia_id;
+    const lote = [...estado.concluidos, ...(estado.pacote ? [estado.pacote] : [])];
+    const partidas = lote.flatMap(d => d.partidas.map(p => ({ familia_id: f, etapa: d.dia, ordem: p.partida, tempo_ms: p.duracaoMs, erros: p.erros })));
+    const dias = estado.concluidos.map(d => ({ familia_id: f, etapa: d.dia, estrelas: d.estrelas.total }));
+    if (partidas.length) {
+      const { error } = await sb.from('partidas').upsert(partidas, { onConflict: 'familia_id,etapa,ordem', ignoreDuplicates: true });
+      if (error) throw error;
+    }
+    if (dias.length) {
+      const { error } = await sb.from('dias').upsert(dias, { onConflict: 'familia_id,etapa', ignoreDuplicates: true });
+      if (error) throw error;
+    }
+  }
+
+  // Pai: painel.
+  const lerPartidas = async () => (await sb.from('partidas').select('*').order('etapa').order('ordem')).data || [];
+  const lerDias = async () => (await sb.from('dias').select('*').order('etapa')).data || [];
+
+  // Recados ------------------------------------------------------------
+  const deQuem = async de => (eu ? (await sb.from('recados').select('*').eq('de', papel(de)).order('criado_em')).data || [] : []);
+
+  // Toca o recado; ao terminar, marca como ouvido, conta 10 s (dá para ouvir de novo) e apaga.
+  // O servidor também apaga sozinho (função limpar-recados), caso o app feche antes.
+  function tocar(recado, { aoProgresso, aoContar, aoApagar }) {
+    const audio = new Audio();
+    let relogio = null;
+    sb.storage.from('recados').createSignedUrl(recado.caminho, 60).then(({ data }) => {
+      if (!data) return aoApagar(); // já foi apagado
+      audio.src = data.signedUrl;
+      audio.play();
+    });
+    audio.ontimeupdate = () => audio.duration && aoProgresso(audio.currentTime / audio.duration);
+    audio.onended = async () => {
+      if (relogio) return;
+      relogio = true;
+      await sb.rpc('marcar_ouvido', { p_id: recado.id }); // o supabase-js só envia com await
+      const fim = Date.now() + APAGAR_APOS_OUVIR_MS;
+      relogio = setInterval(async () => {
+        const resta = Math.max(0, Math.ceil((fim - Date.now()) / 1000));
+        aoContar(resta);
+        if (resta === 0) {
+          clearInterval(relogio);
+          await sb.storage.from('recados').remove([recado.caminho]);
+          await sb.from('recados').delete().eq('id', recado.id);
+          aoApagar();
+        }
+      }, 250);
+    };
+    return audio;
+  }
+
+  // iPhone só grava audio/mp4; o Chrome do S23 também aceita. Assim um toca o do outro.
+  const formato = () => ['audio/mp4', 'audio/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '';
+
+  async function gravar(de) {
+    if (!eu) throw new Error('aparelho não pareado');
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const tipo = formato();
+    const rec = new MediaRecorder(stream, tipo ? { mimeType: tipo } : {}), partes = [];
+    rec.ondataavailable = e => partes.push(e.data);
+    rec.start();
+    return () => new Promise((ok, erro) => {
+      rec.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const mime = (rec.mimeType || 'audio/mp4').split(';')[0];
+        const caminho = `${eu.familia_id}/${crypto.randomUUID()}.${mime === 'audio/webm' ? 'webm' : 'm4a'}`;
+        const up = await sb.storage.from('recados').upload(caminho, new Blob(partes, { type: mime }), { contentType: mime });
+        if (up.error) return erro(up.error);
+        const { error } = await sb.from('recados').insert({ familia_id: eu.familia_id, de: papel(de), caminho });
+        error ? erro(error) : ok();
+      };
+      rec.stop();
+    });
+  }
+
+  const podeGravar = () => !!(eu && navigator.mediaDevices && window.MediaRecorder);
+
+  // Avisa na hora (app aberto) quando chega recado ou dado novo. Devolve função para parar.
+  function ouvir(aoMudar) {
+    const canal = sb.channel('familia')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'recados' }, aoMudar)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'partidas' }, aoMudar)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'dias' }, aoMudar)
+      .subscribe();
+    return () => sb.removeChannel(canal);
+  }
+
+  // Avisos com o app fechado (Web Push). No iPhone só existe com o app aberto pela Tela de Início.
+  const podeAvisar = () => !!(eu && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window);
+  async function ativarAvisos(pedir = true) {
+    if (!podeAvisar()) return false;
+    if (Notification.permission !== 'granted' && (!pedir || await Notification.requestPermission() !== 'granted')) return false;
+    const { data: chave, error: e1 } = await sb.rpc('chave_push');
+    if (e1 || !chave) return false;
+    const bytes = Uint8Array.from(atob(chave.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+    const reg = await navigator.serviceWorker.ready;
+    const sub = (await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: bytes }));
+    const j = sub.toJSON();
+    const { error } = await sb.from('push_inscricoes').upsert({ endpoint: j.endpoint, familia_id: eu.familia_id, papel: eu.papel, p256dh: j.keys.p256dh, auth: j.keys.auth });
+    if (error) throw error;
+    return true;
+  }
+
+  window.Nuvem = {
+    iniciar, quemSou: () => eu, criarFamilia, novoCodigo, criancaEntrou, entrarFamilia,
+    sincronizar, lerPartidas, lerDias, ouvir, podeAvisar, ativarAvisos,
+  };
+  window.Recados = { deQuem, tocar, gravar, podeGravar };
+})();

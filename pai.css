@@ -1,0 +1,24 @@
+.parent-screen { background:#f4efe3 }
+.parent-screen::before { display:none }
+.parent-top { display:flex; align-items:center; gap:10px; height:52px; flex:none; padding:0 14px; border-bottom:2px solid #dfa248; color:#fff8e8; background:#075a6d }
+.parent-top small { margin-left:auto; opacity:.8 }
+.parent-body { flex:1; overflow-y:auto; padding:12px; color:var(--ink) }
+.p-card { margin-bottom:12px; padding:12px; border:1px solid #e1d3b5; border-radius:14px; background:#fff; box-shadow:0 2px 0 #e1d3b5 }
+.p-card h3 { margin:0 0 8px; font-size:15px }
+.p-stars { color:#ffbf26; font-size:32px; letter-spacing:4px; text-align:center }
+.p-stars span { color:#ddd1b8 }
+.p-rules { margin:4px 0 0; padding:0; list-style:none; font-size:13px; font-weight:700 }
+.p-rules li { padding:3px 0 }
+.p-rules .ok::before { content:"✓ "; color:#1f8a3f }
+.p-rules .no::before { content:"✗ "; color:#d13c2f }
+.p-card table { width:100%; border-collapse:collapse; font-size:13px }
+.p-card th { color:#708078; font-size:11px; text-align:left }
+.p-card td,.p-card th { padding:5px 4px; border-bottom:1px solid #f0e6d2 }
+.p-card tfoot td { font-weight:1000; border-bottom:0 }
+.p-msg .avatar { background:#bf6234 }
+.p-rec { font-size:14px }
+.p-note { margin:8px 0 0; color:#708078; font-size:11px; text-align:center }
+.parent-screen .msg { margin-bottom:8px }
+.p-empty { margin:0; color:#708078; font-size:13px }
+.p-day { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f0e6d2; font-size:13px }
+.p-day b { color:#ffbf26; letter-spacing:2px }

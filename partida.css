@@ -1,0 +1,99 @@
+/* Partida — "Mesa da aventura" (25/11/2026)
+   Placa pendurada com sementinhas do dia · mesa temática com casas em relevo ·
+   Theo e o amigo do estilo debruçados na bandeja de peças. */
+
+#tela-partida {
+  --tom: #ffd27a; --mesa-a: #e25b4a; --mesa-b: #fff; --casa: #fffaf3; --casa-pista: #f3e6d6; --borda: #8a4a20;
+  background:#7fbf57 url("ilustracoes/fundo-partida.jpg") center / cover no-repeat;
+  display:none; flex-direction:column; align-items:center; overflow:hidden;
+}
+#tela-partida.active { display:flex }
+#tela-partida::before { background:radial-gradient(120% 70% at 50% 45%, transparent 35%, #0b3a2a66 100%), linear-gradient(var(--tom), transparent 70%); opacity:.55; mix-blend-mode:multiply }
+
+/* Mundos: um tom e uma mesa para cada estilo */
+#tela-partida[data-set="frutas"]   { --tom:#ffb199; --mesa-a:#e9574a; --mesa-b:#fff6ef; --casa:#fffaf4; --casa-pista:#ffe6de; --borda:#a63a2e }
+#tela-partida[data-set="bichos"]   { --tom:#8fd6ff; --mesa-a:#2f9ed8; --mesa-b:#bfeaff; --casa:#f3fbff; --casa-pista:#d6f1ff; --borda:#1f6f9a }
+#tela-partida[data-set="tesouros"] { --tom:#ffd36b; --mesa-a:#c98a3a; --mesa-b:#f6dfa4; --casa:#fff8e4; --casa-pista:#f7e5b4; --borda:#7a4a16 }
+#tela-partida[data-set="dinos"]    { --tom:#b5e27a; --mesa-a:#a47a3c; --mesa-b:#d9b779; --casa:#fffbee; --casa-pista:#efe6c6; --borda:#5d4320 }
+#tela-partida[data-set="carinhas"] { --tom:#d6b5ff; --mesa-a:#7b3fd1; --mesa-b:#b48cf2; --casa:#fbf8ff; --casa-pista:#ece2ff; --borda:#4b2192 }
+
+/* Cantos flutuantes (sem barra: tela imersiva) */
+.canto-esq,.canto-dir { position:absolute; z-index:6; top:10px }
+.canto-esq { left:12px; padding:6px; border-radius:12px; background:#075a6dcc }
+.canto-dir { right:12px; width:30px; height:30px }
+
+/* Placa pendurada por cordas */
+.placa { position:relative; z-index:4; display:flex; flex-direction:column; align-items:center; gap:7px; margin-top:4px; padding-top:22px; transform-origin:50% 0 }
+.placa::before,.placa::after { content:""; position:absolute; top:0; width:3px; height:30px; background:repeating-linear-gradient(#c9a26b 0 4px,#8b6a3e 4px 7px); border-radius:2px }
+.placa::before { left:24% } .placa::after { right:24% }
+.placa.balanca { animation:balanca 1.6s cubic-bezier(.3,1.6,.5,1) }
+@keyframes balanca { 0% { transform:rotate(-7deg) } 30% { transform:rotate(5deg) } 55% { transform:rotate(-3deg) } 80% { transform:rotate(1deg) } 100% { transform:none } }
+.placa-tabua { display:flex; align-items:center; gap:9px; padding:6px 16px 6px 7px; border:3px solid #f5c65d; border-radius:16px; background:linear-gradient(#d68a44,#8c461f); box-shadow:inset 0 2px 0 #ffd28f,0 5px 0 #57301c,0 10px 18px #0005 }
+.placa-tabua h2 { margin:0; color:#fff8e8; font-size:20px; line-height:1; white-space:nowrap; text-shadow:0 2px #5e2c14 }
+.selo { display:grid; place-items:center; width:40px; height:40px; flex:none; padding:4px; border:3px solid #fff; border-radius:50%; background:radial-gradient(#fffbe9,#ffe08a); box-shadow:0 2px 0 #b9760c }
+.selo > * { width:100%; height:100%; object-fit:contain; animation:none!important; filter:none }
+
+/* Sementinhas do dia (no lugar do "1/6") */
+.sementes { display:flex; gap:7px; margin:0; padding:5px 9px; list-style:none; border-radius:99px; background:#00000026; backdrop-filter:blur(2px) }
+.sementes li { width:13px; height:13px; border:2px solid #fff8e8; border-radius:50% 50% 50% 50%/60% 60% 40% 40%; background:#ffffff40 }
+.sementes li.feita { background:radial-gradient(circle at 35% 30%,#fff6b0,#ffbf26 60%,#d98e0b); border-color:#fff; box-shadow:0 0 6px #ffe58a }
+.sementes li.agora { background:#fff; transform:scale(1.25); animation:pulsa 1.2s ease-in-out infinite }
+@keyframes pulsa { 50% { box-shadow:0 0 0 5px #ffffff55 } }
+
+/* Mesa temática e tabuleiro de casas em relevo */
+.mesa { position:relative; z-index:3; width:min(calc(100% - 14px),56svh,470px); margin-top:12px; padding:10px; border-radius:28px;
+  background:repeating-conic-gradient(var(--mesa-a) 0 25%,var(--mesa-b) 0 50%) 0 0/28px 28px;
+  box-shadow:inset 0 0 0 4px #ffffffaa,inset 0 0 0 7px var(--borda),0 8px 0 color-mix(in srgb,var(--borda) 80%,#000),0 16px 28px #0006 }
+#tela-partida[data-set="bichos"] .mesa { background:radial-gradient(circle at 20% 25%,#7fd36b 0 9px,transparent 10px),radial-gradient(circle at 80% 78%,#7fd36b 0 8px,transparent 9px),repeating-radial-gradient(circle at 50% 120%,var(--mesa-b) 0 6px,#9edcff 6px 12px) }
+#tela-partida[data-set="tesouros"] .mesa { background:radial-gradient(circle at 12% 15%,#e2b867 0 3px,transparent 4px) 0 0/22px 22px,linear-gradient(135deg,#f6dfa4,#e9c57c) }
+#tela-partida[data-set="dinos"] .mesa { background:repeating-linear-gradient(40deg,#c9a15d 0 3px,#a47a3c 3px 6px,#d9b779 6px 9px),#c9a15d }
+#tela-partida[data-set="carinhas"] .mesa { background:radial-gradient(circle,#fff6b0 0 2.5px,transparent 3.5px) 0 0/24px 24px,linear-gradient(#8f57e6,#5b2aa8) }
+.mesa .board { width:100%; max-width:none; margin:0; padding:0; gap:5px; border:0; border-radius:0; background:transparent; box-shadow:none; overflow:visible }
+.mesa .cell { border:0!important; border-radius:16px; background:var(--casa)!important; box-shadow:inset 0 -5px 0 #0000001a,inset 0 2px 0 #ffffffcc,0 2px 0 #0000002a }
+.mesa .cell:disabled { background:var(--casa-pista)!important; box-shadow:inset 0 3px 6px #00000022 }
+.mesa .cell:nth-child(4n+2) { margin-right:5px } .mesa .cell:nth-child(4n+3) { margin-left:5px }
+.mesa .cell:nth-child(n+5):nth-child(-n+8) { margin-bottom:5px } .mesa .cell:nth-child(n+9):nth-child(-n+12) { margin-top:5px }
+.mesa .cell.selected { box-shadow:inset 0 0 0 4px #ffbf26,0 0 12px #ffd84d }
+.mesa .cell.mistake { background:#ffc7c2!important; outline:0; box-shadow:inset 0 0 0 4px #e63b30 }
+.mesa .piece { width:84%; height:84% }
+.mesa .board:not(.complete) .cell:not(.new):not(.unit-complete) .piece { animation:boia 3s ease-in-out calc(var(--i) * -190ms) infinite }
+@keyframes boia { 50% { transform:translateY(-2px) scale(1.03) } }
+.mesa .board.complete { box-shadow:none; animation:none }
+.mesa:has(.board.complete) { animation:mesaBrilha 1s ease-out both }
+@keyframes mesaBrilha { 40% { filter:brightness(1.15) drop-shadow(0 0 18px #ffe58a) } }
+
+/* Bastidor: Theo e o amigo do estilo debruçados atrás da bandeja */
+.bastidor { position:relative; z-index:2; flex:1; width:100%; min-height:0; pointer-events:none }
+.theo-buddy { position:absolute; left:-2%; bottom:-78px; height:calc(100% + 110px); max-height:320px; transform-origin:50% 100%; filter:drop-shadow(0 6px 5px #0005); animation:respira 2.8s ease-in-out infinite }
+.amigo { position:absolute; right:3%; bottom:-14px; width:min(36vw,150px); height:min(36vw,150px); transform-origin:50% 100%; filter:drop-shadow(0 6px 4px #0004); animation:quica 2.2s ease-in-out infinite }
+.amigo > * { width:100%; height:100%; object-fit:contain; animation:none!important; filter:none }
+#tela-partida .chest { display:none; position:absolute; right:12%; bottom:28px; top:auto; width:58px; height:48px; transform:scale(1.9); transform-origin:50% 100% }
+#tela-partida[data-set="tesouros"] .chest { display:block }
+#tela-partida[data-set="tesouros"] .amigo { display:none }
+@keyframes respira { 50% { transform:scale(1.015,.99) } }
+@keyframes quica { 0%,100% { transform:translateY(0) } 45%,55% { transform:translateY(-12px) scale(.97,1.03) } 90% { transform:scale(1.05,.95) } }
+.theo-buddy.yay,.amigo.yay { animation:yay .4s ease-out 2 alternate }
+@keyframes yay { to { transform:translateY(-30px) rotate(-4deg) } }
+.theo-buddy.oops,.amigo.oops { animation:oops .5s ease-in-out }
+@keyframes oops { 25% { transform:rotate(-8deg) } 75% { transform:rotate(6deg) } }
+.theo-buddy.festa,.amigo.festa { animation:festa .5s ease-out 3 alternate }
+@keyframes festa { to { transform:translateY(-44px) scale(1.06) rotate(5deg) } }
+
+/* Bandeja de peças: na altura do polegar, por cima dos personagens */
+.bandeja { position:relative; z-index:5; display:flex; justify-content:center; gap:9px; width:calc(100% - 14px); margin:0 0 12px!important; padding:11px 10px 13px;
+  border:4px solid #a96632; border-radius:30px; background:linear-gradient(#fff9ec,#f1ddb2); box-shadow:inset 0 3px 0 #fff,0 6px 0 #684027,0 -8px 22px #0003 }
+.bandeja button { display:grid; place-items:center; width:min(15.5vw,64px)!important; height:min(15.5vw,64px)!important; padding:6px!important; border:3px solid #fff; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff,#fbe9c6 70%); box-shadow:0 5px 0 #b98a4f,0 8px 10px #0002!important; transition:transform .15s }
+.bandeja .eraser { padding:11px!important }
+.bandeja button:active { transform:translateY(3px) }
+.bandeja button[aria-pressed="true"] { transform:translateY(-8px) scale(1.1); box-shadow:0 0 0 4px #ffbf26,0 10px 0 #b98a4f,0 0 18px #ffe58a!important }
+
+/* Borboletas e raios de sol */
+.vivo { position:absolute; inset:0; z-index:1; overflow:hidden; pointer-events:none }
+.vivo::before { content:""; position:absolute; right:-40%; top:-40%; width:110%; aspect-ratio:1; border-radius:50%; background:repeating-conic-gradient(#fff6b055 0 6deg,transparent 6deg 18deg); -webkit-mask:radial-gradient(circle,#000 5%,transparent 60%); mask:radial-gradient(circle,#000 5%,transparent 60%); animation:spin 40s linear infinite }
+.borboleta { position:absolute; left:-10%; font-size:20px; font-style:normal; animation:voo 16s ease-in-out infinite }
+.borboleta.b1 { top:64% } .borboleta.b2 { top:6%; font-size:16px; animation-duration:21s; animation-delay:-8s } .borboleta.b3 { top:72%; font-size:15px; animation-duration:25s; animation-delay:-15s }
+@keyframes voo { 0% { transform:translate(0,0) rotate(8deg) } 25% { transform:translate(30vw,-5vh) rotate(-8deg) } 50% { transform:translate(62vw,2vh) rotate(10deg) } 75% { transform:translate(92vw,-4vh) rotate(-6deg) } 100% { transform:translate(130vw,0) rotate(8deg) } }
+
+@media (max-height:640px) { .theo-buddy,.amigo { display:none } }
+@media (prefers-reduced-motion:reduce) { .vivo,.theo-buddy,.amigo,.placa,.mesa .piece,.sementes li { animation:none!important } .borboleta { display:none } }

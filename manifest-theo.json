@@ -1,0 +1,15 @@
+{
+  "id": "theo",
+  "name": "Sudoku das Cores",
+  "short_name": "Sudoku Theo",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b6274",
+  "theme_color": "#0b6274",
+  "icons": [
+    { "src": "icone-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
