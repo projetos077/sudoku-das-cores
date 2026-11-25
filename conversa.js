@@ -34,11 +34,11 @@
   function montar(raiz, { eu, nomeOutro, inicialOutro, corOutro, inicialEu, som = () => {}, aoOuvido = () => {} }) {
     const R = () => window.Recados;
     raiz.classList.add('wa');
-    raiz.innerHTML = `<div class="wa-msgs" role="log" aria-label="Recados"></div>
+    raiz.innerHTML = `<div class="wa-msgs" role="log" aria-label="Recados"><p class="wa-vazio">Carregando…</p></div>
       <p class="wa-aviso" hidden></p>
       <div class="wa-barra" data-estado="parado">
         <button class="wa-lixo" type="button" aria-label="Apagar gravação">🗑</button>
-        <span class="wa-dica">Toque no microfone para gravar</span>
+        <span class="wa-dica">Toque para gravar</span>
         <span class="wa-rec" aria-live="polite"><i class="wa-ponto"></i><b>0:00</b><span class="wa-ondas"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
         <button class="wa-mic" type="button" aria-label="Gravar recado">${MIC}</button>
         <button class="wa-enviar" type="button" aria-label="Enviar recado">${SETA}</button>

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b6274">
   <title>Sudoku das Cores — Theo</title>
-  <link rel="stylesheet" href="style.css?v=17">
+  <link rel="stylesheet" href="style.css?v=19">
   <link rel="manifest" href="manifest-theo.json">
   <link rel="apple-touch-icon" href="icone-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -40,9 +40,12 @@
     </div>
   </section>
 
-  <section class="phone wa-tela" id="tela-recado" aria-label="Recados">
-    <div class="wa-topo"><button class="wa-voltar" id="voltar-trilha" type="button" aria-label="Voltar para a trilha">‹</button><span class="avatar" style="background:#4b8197">P</span><b>Papai</b></div>
-    <div class="wa-caixa" id="conversa"></div>
+  <section class="phone voice-screen" id="tela-recado" aria-label="Recados">
+    <div class="mini-top"><span class="brand-dots" aria-hidden="true"><i style="--c:var(--blue)"></i><i style="--c:var(--yellow)"></i><i style="--c:var(--green)"></i><i style="--c:var(--purple)"></i></span><button class="settings" type="button" data-som aria-label="Desligar sons">⚙</button></div>
+    <div class="screen-body"><h2 class="wood-title">Recados</h2><div class="paper voice-paper rc-papel">
+      <p class="rc-titulo"><span class="avatar" style="background:#4b8197">P</span>Papai</p>
+      <div class="wa-caixa wa-jogo" id="conversa"></div>
+    </div><button class="next" id="voltar-trilha" type="button">Trilha <span aria-hidden="true">▶</span></button></div>
   </section>
 
   <!-- Só aparece uma vez, na instalação: o pai digita aqui o código que o celular dele mostra. -->

@@ -14,7 +14,7 @@
 </head>
 <body>
   <section class="phone parent-screen active" aria-label="Painel do pai">
-    <div class="parent-top"><svg class="vasco" viewBox="0 0 32 32" aria-hidden="true"><defs><clipPath id="vasco-c"><circle cx="16" cy="16" r="15"/></clipPath></defs><g clip-path="url(#vasco-c)"><rect width="32" height="32" fill="#111"/><path d="M-4 30 30-4 38 4 4 38z" fill="#fff"/><path d="M20.4 11.6l-1.4-4.4h6l-1.4 4.4 4.4-1.4v6l-4.4-1.4 1.4 4.4h-6l1.4-4.4-4.4 1.4v-6z" fill="#e0262b"/></g><circle cx="16" cy="16" r="15" fill="none" stroke="#fff" stroke-width="1.5"/></svg><b id="titulo">SUDOKU - THEO</b><small id="data"></small></div>
+    <div class="parent-top"><svg class="vasco" viewBox="0 0 32 32" aria-hidden="true"><defs><clipPath id="vasco-c"><circle cx="16" cy="16" r="15"/></clipPath></defs><g clip-path="url(#vasco-c)"><rect width="32" height="32" fill="#111"/><path d="M-4 30 30-4 38 4 4 38z" fill="#fff"/><path d="M20.4 11.6l-1.4-4.4h6l-1.4 4.4 4.4-1.4v6l-4.4-1.4 1.4 4.4h-6l1.4-4.4-4.4 1.4v-6z" fill="#e0262b"/></g><circle cx="16" cy="16" r="15" fill="none" stroke="#fff" stroke-width="1.5"/></svg><b id="titulo">SUDOKU - THEO</b><small id="data"></small><button class="p-tudo" id="recolher-tudo" type="button" aria-label="Recolher todos os blocos">⇕</button></div>
     <div class="parent-body">
       <div class="p-card" id="parear" hidden><h3>Ligar ao celular do Theo</h3>
         <p class="p-empty" id="parear-passo">Gere um código e digite no celular do Theo, na tela "Celular do papai".</p>
@@ -26,13 +26,13 @@
         <button class="next p-rec" id="ativar-avisos" type="button">🔔 Ativar avisos</button>
       </div>
       <div class="p-card p-topo"><div><b id="seguidos">0</b><span>dias verdes seguidos</span></div><div class="p-mes" id="resumo-mes"></div></div>
-      <div class="p-card" id="calendario">
+      <div class="p-card" id="calendario" data-recolher>
         <div class="cal-nav"><button type="button" id="mes-antes" aria-label="Mês anterior">‹</button><h3 id="mes-nome"></h3><button type="button" id="mes-depois" aria-label="Próximo mês">›</button></div>
         <div class="cal-grade" id="cal-grade"></div>
         <p class="cal-legenda"><span class="d-verde">✓</span> completo <span class="d-amarelo">◐</span> incompleto <span class="d-cinza">–</span> não jogou <i class="cal-aviso"></i> mais de <b id="limite-aviso"></b> erros num jogo</p>
       </div>
-      <div class="p-card" id="dia-detalhe" hidden></div>
-      <div class="p-card" id="grafico" hidden><h3>Evolução</h3>
+      <div class="p-card" id="dia-detalhe" data-recolher hidden><div id="dia-conteudo"></div></div>
+      <div class="p-card" id="grafico" data-recolher hidden><h3>Evolução</h3>
         <div class="g-kpis" id="g-kpis"></div>
         <div class="g-filtros">
           <div class="g-seg" id="g-medida" role="group" aria-label="O que mostrar"><button type="button" data-v="tempo">Tempo</button><button type="button" data-v="erros">Erros</button><button type="button" data-v="estrelas">Estrelas</button></div>
@@ -42,7 +42,7 @@
         <div class="g-area"><svg id="g-svg" role="img"></svg><div class="g-dica" id="g-dica" hidden></div></div>
         <p class="p-note" id="g-nota"></p>
       </div>
-      <div class="p-card" id="cartao-recados"><h3>Recados</h3><div class="wa-caixa p-conversa" id="conversa"></div><p class="p-note">Cada áudio é apagado 15 s depois de ouvido.</p></div>
+      <div class="p-card" id="cartao-recados"><h3 class="rc-titulo"><span class="avatar" style="background:#bf6234">T</span>Recados do Theo</h3><div class="wa-caixa wa-jogo p-conversa" id="conversa"></div><p class="p-note">Cada áudio é apagado 15 s depois de ouvido.</p></div>
       <p class="p-note" id="aviso" hidden></p>
     </div>
   </section>
@@ -154,7 +154,7 @@
       if (!info) return;
       const jogos = info.jogos.slice().sort((a, b) => a.fim.localeCompare(b.fim));
       const [a, m, d] = escolhido.split('-');
-      caixa.innerHTML = `<h3>${d}/${m}/${a} · ${info.estado === 'verde' ? 'dia completo ' + estrelinhas(info.estrelas) : `incompleto · ${jogos.length} de ${L.JOGOS_POR_DIA} jogos`}</h3>
+      $('#dia-conteudo').innerHTML = `<h3>${d}/${m}/${a} · ${info.estado === 'verde' ? 'dia completo ' + estrelinhas(info.estrelas) : `incompleto · ${jogos.length} de ${L.JOGOS_POR_DIA} jogos`}</h3>
         <table><thead><tr><th>Jogo</th><th>Hora</th><th>Tempo</th><th>Erros</th><th>Nota</th></tr></thead><tbody>${jogos.map(j => `<tr>
           <td>${j.partida}</td><td>${hora(j.fim)}</td><td>${tempo(j.duracaoMs)}</td>
           <td>${j.erros > L.AVISO_ERROS_JOGO ? `<span class="p-alerta">aviso: ${j.erros} erros</span>` : j.erros}</td><td>${estrelinhas(L.estrelasJogo(j))}</td></tr>`).join('')}</tbody>
@@ -271,6 +271,25 @@
     }
     document.querySelectorAll('#g-medida button').forEach(b => b.addEventListener('click', () => { medida = b.dataset.v; grafico(); }));
     document.querySelectorAll('#g-periodo button').forEach(b => b.addEventListener('click', () => { periodo = +b.dataset.v; grafico(); }));
+
+    // Recolher blocos: ▾ em cada um, ⇕ no topo para todos; o painel lembra o que ficou recolhido.
+    const RECOLHIDOS = 'pai-recolhidos', blocos = [...document.querySelectorAll('[data-recolher]')];
+    const guardados = (() => { try { return JSON.parse(localStorage.getItem(RECOLHIDOS)) || []; } catch { return []; } })();
+    function recolher(card, sim) {
+      card.classList.toggle('recolhido', sim);
+      card.querySelector('.p-recolher').setAttribute('aria-expanded', String(!sim));
+      localStorage.setItem(RECOLHIDOS, JSON.stringify(blocos.filter(b => b.classList.contains('recolhido')).map(b => b.id)));
+      const algumAberto = blocos.some(b => !b.classList.contains('recolhido'));
+      $('#recolher-tudo').setAttribute('aria-label', algumAberto ? 'Recolher todos os blocos' : 'Abrir todos os blocos');
+    }
+    blocos.forEach(card => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'p-recolher'; b.textContent = '▾'; b.setAttribute('aria-label', 'Recolher ou abrir este bloco');
+      b.onclick = () => recolher(card, !card.classList.contains('recolhido'));
+      card.prepend(b);
+      recolher(card, guardados.includes(card.id));
+    });
+    $('#recolher-tudo').onclick = () => { const fechar = blocos.some(b => !b.classList.contains('recolhido')); blocos.forEach(b => recolher(b, fechar)); };
 
     $('#cal-grade').addEventListener('click', e => {
       const b = e.target.closest('.cal-dia');

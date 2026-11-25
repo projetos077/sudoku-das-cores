@@ -48,7 +48,8 @@
 .p-alerta { padding:2px 6px; border-radius:6px; color:#fff; background:#ff8a1f; font-size:11px; font-weight:1000; white-space:nowrap }
 .p-enviar { margin-top:8px; background:linear-gradient(#3fd06a,#1f9c45) }
 .p-reiniciar { margin-top:10px; background:linear-gradient(#f0a13a,#d27a17); box-shadow:0 4px 0 #9a560c }
-.p-conversa { height:420px; margin:0 -12px; overflow:hidden; border-radius:0 0 14px 14px }
+.p-conversa { height:440px; margin-top:8px }
+#cartao-recados .rc-titulo { margin:0 }
 .p-conversa .wa-bolha { min-width:220px }
 /* Gráfico de evolução */
 .g-kpis { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px }
@@ -82,3 +83,13 @@
 .g-dica small { color:#cfe0e8; font-size:10px }
 .parent-top .vasco { width:34px; height:34px; flex:none; filter:drop-shadow(0 1px 2px #0006) }
 .parent-top b { letter-spacing:1px }
+/* Recolher blocos */
+.p-card[data-recolher] { position:relative }
+.p-recolher { position:absolute; top:8px; right:8px; z-index:2; width:32px; height:32px; padding:0; border:0; border-radius:50%; color:var(--ink); background:#f4efe3; font-size:18px; line-height:1; cursor:pointer; transition:transform .2s }
+.recolhido > .p-recolher { transform:rotate(-90deg) }
+.p-card[data-recolher] > h3, #dia-conteudo > h3, #calendario .cal-nav { padding-right:38px }
+.p-card.recolhido { padding-bottom:4px }
+#calendario.recolhido :is(.cal-grade,.cal-legenda),
+#dia-detalhe.recolhido #dia-conteudo > :not(h3),
+#grafico.recolhido > :not(h3):not(.p-recolher) { display:none }
+.p-tudo { width:34px; height:34px; margin-left:6px; padding:0; border:2px solid #fff8; border-radius:50%; color:#fff; background:none; font-size:18px; cursor:pointer }
