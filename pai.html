@@ -77,7 +77,7 @@
           $('#codigo').textContent = codigo; $('#codigo').hidden = false;
           $('#parear-passo').textContent = 'Digite este código no celular do Theo. Vale 15 minutos.';
           $('#gerar').textContent = 'Gerar outro código';
-        } catch { avisar('Não consegui gerar o código. Tente de novo.'); }
+        } catch (e) { avisar(/já existe uma família/.test(e && e.message) ? 'O Theo já tem uma família ligada a outro login do pai. Abra o painel onde ele foi ligado da primeira vez (Safari ou ícone da Tela de Início).' : 'Não consegui gerar o código. Tente de novo.'); }
       });
       const esperar = setInterval(async () => {
         if (N.quemSou() && await N.criancaEntrou()) { clearInterval(esperar); location.reload(); }
