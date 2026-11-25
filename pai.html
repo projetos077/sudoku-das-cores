@@ -25,11 +25,11 @@
         <p class="p-empty" id="avisos-texto">Receba um aviso quando chegar recado do Theo ou ele terminar o dia.</p>
         <button class="next p-rec" id="ativar-avisos" type="button">🔔 Ativar avisos</button>
       </div>
-      <div class="p-card p-topo"><div><b id="seguidos">0</b><span>dias verdes seguidos</span></div><div class="p-mes" id="resumo-mes"></div></div>
+      <div class="p-card p-topo"><div><b id="seguidos">0</b><span>dias verdes seguidos</span></div><div class="p-mes" id="resumo-mes"></div><p class="p-recorde" id="recorde" hidden></p></div>
       <div class="p-card" id="calendario" data-recolher>
         <div class="cal-nav"><button type="button" id="mes-antes" aria-label="Mês anterior">‹</button><h3 id="mes-nome"></h3><button type="button" id="mes-depois" aria-label="Próximo mês">›</button></div>
         <div class="cal-grade" id="cal-grade"></div>
-        <p class="cal-legenda"><span class="d-verde">✓</span> completo <span class="d-amarelo">◐</span> incompleto <span class="d-cinza">–</span> não jogou <i class="cal-aviso"></i> mais de <b id="limite-aviso"></b> erros num jogo</p>
+        <p class="cal-legenda"><span class="d-verde">✓</span> completo <span class="d-amarelo">◐</span> incompleto <span class="d-cinza">–</span> não jogou <i class="cal-aviso"></i> mais de <b id="limite-aviso"></b> erros num jogo<br><i class="cal-seta melhor">▲</i> mais rápido que o dia anterior <i class="cal-seta pior">▼</i> mais lento 🏆 melhor tempo</p>
       </div>
       <div class="p-card" id="dia-detalhe" data-recolher hidden><div id="dia-conteudo"></div></div>
       <div class="p-card" id="grafico" data-recolher hidden><h3>Evolução</h3>
@@ -127,7 +127,9 @@
 
     function desenhar() {
       mapa = L.mapaDias(dados.jogos, dados.dias);
-      const n = L.sequenciaVerde(mapa, hoje);
+      const n = L.sequenciaVerde(mapa, hoje), tp = L.tempos(mapa);
+      $('#recorde').hidden = !tp.melhor;
+      if (tp.melhor) $('#recorde').innerHTML = `🏆 Melhor tempo: <b>${tempo(tp.melhor.mediaMs)}</b> por jogo · ${tp.melhor.data.split('-').reverse().slice(0, 2).join('/')}`;
       $('#seguidos').textContent = n;
       $('#data').textContent = hoje.split('-').reverse().join('/');
       // Calendário do mês: semanas começando no domingo.
@@ -139,7 +141,7 @@
       for (let d = 1; d <= total; d++) {
         const data = L.dataLocal(new Date(ano, m, d)), estado = L.estadoDoDia(mapa, data, hoje), info = mapa[data];
         conta[estado]++;
-        celulas.push(`<button type="button" class="cal-dia d-${estado}${data === hoje ? ' hoje' : ''}${data === escolhido ? ' sel' : ''}" data-data="${data}" ${info ? '' : 'disabled'} aria-label="${d}: ${estado}">${d}<small>${ICONE[estado]}</small>${info && info.aviso ? '<i class="cal-aviso"></i>' : ''}</button>`);
+        celulas.push(`<button type="button" class="cal-dia d-${estado}${data === hoje ? ' hoje' : ''}${data === escolhido ? ' sel' : ''}" data-data="${data}" ${info ? '' : 'disabled'} aria-label="${d}: ${estado}">${d}<small>${ICONE[estado]}</small>${info && info.aviso ? '<i class="cal-aviso"></i>' : ''}${tp.porData[data] && tp.porData[data].seta ? `<i class="cal-seta ${tp.porData[data].seta}">${tp.porData[data].seta === 'melhor' ? '▲' : '▼'}</i>` : ''}${tp.melhor && tp.melhor.data === data ? '<i class="cal-trofeu">🏆</i>' : ''}</button>`);
       }
       $('#cal-grade').innerHTML = celulas.join('');
       $('#resumo-mes').innerHTML = `<span class="d-verde">${conta.verde}</span> verdes <span class="d-amarelo">${conta.amarelo}</span> amarelos <span class="d-cinza">${conta.cinza}</span> cinzas`;
@@ -153,8 +155,10 @@
       caixa.hidden = !info;
       if (!info) return;
       const jogos = info.jogos.slice().sort((a, b) => a.fim.localeCompare(b.fim));
-      const [a, m, d] = escolhido.split('-');
-      $('#dia-conteudo').innerHTML = `<h3>${d}/${m}/${a} · ${info.estado === 'verde' ? 'dia completo ' + estrelinhas(info.estrelas) : `incompleto · ${jogos.length} de ${L.JOGOS_POR_DIA} jogos`}</h3>
+      const [a, m, d] = escolhido.split('-'), tp = L.tempos(mapa), t = tp.porData[escolhido];
+      const curto = ms => ms < 60000 ? `${Math.round(ms / 1000)} s` : tempo(ms);
+      const comparacao = !t ? '' : `<p class="p-comp">Tempo médio por jogo: <b>${tempo(t.mediaMs)}</b>${tp.melhor.data === escolhido ? ' · 🏆 melhor tempo' : ''}${t.seta ? `<br><span class="${t.seta}">${t.seta === 'melhor' ? '▲' : '▼'} ${curto(Math.abs(t.difMs))} ${t.seta === 'melhor' ? 'mais rápido' : 'mais lento'} que o dia anterior</span>` : ''}</p>`;
+      $('#dia-conteudo').innerHTML = `<h3>${d}/${m}/${a} · ${info.estado === 'verde' ? 'dia completo ' + estrelinhas(info.estrelas) : `incompleto · ${jogos.length} de ${L.JOGOS_POR_DIA} jogos`}</h3>${comparacao}
         <table><thead><tr><th>Jogo</th><th>Hora</th><th>Tempo</th><th>Erros</th><th>Nota</th></tr></thead><tbody>${jogos.map(j => `<tr>
           <td>${j.partida}</td><td>${hora(j.fim)}</td><td>${tempo(j.duracaoMs)}</td>
           <td>${j.erros > L.AVISO_ERROS_JOGO ? `<span class="p-alerta">aviso: ${j.erros} erros</span>` : j.erros}</td><td>${estrelinhas(L.estrelasJogo(j))}</td></tr>`).join('')}</tbody>

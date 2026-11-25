@@ -82,6 +82,24 @@
     const primeira = Object.keys(mapa).sort()[0];
     return primeira && data > primeira && data < hoje ? 'cinza' : 'vazio'; // futuro e antes do 1º uso: sem cor
   }
+  // Tempo de cada dia (média por jogo) comparado com o dia jogado anterior, e o melhor tempo de todos.
+  // Devolve { porData: { data: { mediaMs, seta: 'melhor'|'pior'|null, difMs } }, melhor: { data, mediaMs } | null }.
+  const IGUAL_MS = 3000; // diferença até 3 s conta como igual (sem seta)
+  function tempos(mapa) {
+    const porData = {};
+    let antes = null, melhor = null;
+    Object.keys(mapa).sort().forEach(data => {
+      const js = mapa[data].jogos;
+      if (!js.length) return;
+      const mediaMs = js.reduce((s, j) => s + j.duracaoMs, 0) / js.length;
+      const dif = antes === null ? 0 : mediaMs - antes;
+      porData[data] = { mediaMs, seta: Math.abs(dif) <= IGUAL_MS ? null : dif < 0 ? 'melhor' : 'pior', difMs: dif };
+      if (melhor === null || mediaMs < melhor.mediaMs) melhor = { data, mediaMs };
+      antes = mediaMs;
+    });
+    return { porData, melhor };
+  }
+
   // Dias verdes seguidos até hoje (se hoje ainda não é verde, conta a partir de ontem).
   function sequenciaVerde(mapa, hoje) {
     const d = new Date(hoje + 'T12:00:00');
@@ -91,7 +109,7 @@
     return n;
   }
 
-  const Logica = { LIMITE_ERROS, LIMITE_MEDIA_MS, JOGOS_POR_DIA, AVISO_ERROS_JOGO, ESTILOS, dataLocal, dataDe, estadoInicial, situacao, estiloDoJogo, pegarPacote, reiniciar, estrelas, estrelasJogo, mapaDias, estadoDoDia, sequenciaVerde };
+  const Logica = { LIMITE_ERROS, LIMITE_MEDIA_MS, JOGOS_POR_DIA, AVISO_ERROS_JOGO, ESTILOS, dataLocal, dataDe, estadoInicial, situacao, estiloDoJogo, pegarPacote, reiniciar, estrelas, estrelasJogo, mapaDias, estadoDoDia, sequenciaVerde, tempos };
   if (typeof module !== 'undefined') module.exports = Logica;
   else raiz.Logica = Logica;
 })(this);
