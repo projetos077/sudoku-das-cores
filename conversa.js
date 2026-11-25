@@ -91,6 +91,7 @@
       const audio = R().tocar(r, {
         aoProgresso: () => {},
         aoContar: s => { conta.hidden = false; conta.textContent = s; conta.style.setProperty('--p', (1 - s * 1000 / R().APAGAR_APOS_OUVIR_MS) * 100 + '%'); bolha.classList.add('ouvida'); },
+        aoErro: () => { soltarAtual(); avisar('Não consegui tocar o áudio. Toque no ▶ de novo.'); },
         aoApagar: () => { bolha.closest('.wa-linha').classList.add('sumindo'); setTimeout(atualizar, 450); },
       });
       if (audio) acompanhar(bolha, audio, 0);

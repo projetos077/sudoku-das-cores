@@ -327,12 +327,14 @@ body { overflow:hidden; -webkit-tap-highlight-color:transparent; user-select:non
 .wa-barra[data-estado="gravando"] .wa-enviar { animation:pulseEnviar 1s ease-in-out infinite }
 @keyframes pulseEnviar { 50% { box-shadow:0 0 0 12px #00a88444 } }
 /* Recados com cara de jogo e toque de WhatsApp (.wa-jogo): tela do Theo e painel do pai */
-.rc-papel { flex:1; min-height:0; align-items:stretch; gap:6px; padding:10px 8px 8px }
-.rc-papel .wa-caixa { flex:1; min-height:0 }
+.rc-papel { flex:none; align-items:stretch; gap:6px; padding:10px 8px 8px }
+.rc-nota { margin:2px 0 0; color:#708078; font-size:11px; text-align:center }
 .rc-titulo { display:flex; align-items:center; gap:8px; margin:0 2px; color:#723b26; font-size:17px; font-weight:1000 }
 .rc-titulo .avatar { width:32px; height:32px; font-size:16px }
 .wa-jogo { border:2px solid #dec9a3; border-radius:14px; overflow:hidden; background:#fff8e8 repeating-linear-gradient(0deg,transparent 0 25px,#f3e6cc 25px 26px) }
-.wa-jogo .wa-msgs { padding:10px 8px }
+.wa-jogo .wa-msgs { flex:none; max-height:300px; padding:10px 8px } /* cresce com os áudios, igual no pai e no Theo */
+.wa-jogo .wa-vazio { margin:4px auto }
+.wa-jogo .wa-bolha { min-width:220px }
 .wa-jogo .wa-bolha { border:2px solid #fff; box-shadow:0 3px 0 #d8c39c; text-align:left }
 .wa-jogo .eu .wa-bolha { box-shadow:0 3px 0 #9fd39a }
 .wa-jogo .wa-play { border:3px solid #fff; background:linear-gradient(#36c08f,#00a884); box-shadow:0 3px 0 #00775e }

@@ -98,17 +98,21 @@
 
   // Toca o recado; ao terminar, marca como ouvido, conta 15 s (dá para ouvir de novo) e apaga.
   // O servidor também apaga sozinho (função limpar-recados), caso o app feche antes.
-  function tocar(recado, { aoProgresso, aoContar, aoApagar }) {
-    const audio = new Audio();
+  // iPhone/Safari só deixa tocar dentro do toque do usuário: damos play() já, num silêncio, e só depois trocamos pelo áudio.
+  const SILENCIO = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+  function tocar(recado, { aoProgresso, aoContar, aoApagar, aoErro = () => {} }) {
+    const audio = new Audio(SILENCIO);
     let relogio = null;
+    audio.play().catch(() => {});
     sb.storage.from('recados').createSignedUrl(recado.caminho, 60).then(({ data }) => {
       if (!data) return aoApagar(); // já foi apagado
       audio.src = data.signedUrl;
-      audio.play();
-    });
+      return audio.play().catch(aoErro);
+    }).catch(aoErro);
+    audio.onerror = () => { if (audio.src !== SILENCIO && !audio.src.startsWith('data:')) aoErro(); };
     audio.ontimeupdate = () => audio.duration && aoProgresso(audio.currentTime / audio.duration);
     audio.onended = async () => {
-      if (relogio) return;
+      if (relogio || audio.src.startsWith('data:')) return; // o fim do silêncio não conta como ouvido
       relogio = true;
       await sb.rpc('marcar_ouvido', { p_id: recado.id }); // o supabase-js só envia com await
       const fim = Date.now() + APAGAR_APOS_OUVIR_MS;
