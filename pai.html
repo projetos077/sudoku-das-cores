@@ -69,6 +69,9 @@
     if (!eu) {
       document.querySelectorAll('.parent-body > .p-card').forEach(c => { c.hidden = c.id !== 'parear'; });
       $('#gerar').addEventListener('click', async () => {
+        // Criar família só na primeira vez de verdade: o ícone da Tela de Início não divide o login com o Safari,
+        // então um painel "novo" pode ser só o mesmo pai em outro lugar (isso já criou uma família sobrando).
+        if (!N.quemSou() && !confirm('Criar uma família nova?\n\nSe o Theo já está ligado a este painel em outro lugar (Safari ou ícone da Tela de Início), cancele e abra o painel lá.')) return;
         try {
           const codigo = N.quemSou() ? await N.novoCodigo() : await N.criarFamilia();
           $('#codigo').textContent = codigo; $('#codigo').hidden = false;
