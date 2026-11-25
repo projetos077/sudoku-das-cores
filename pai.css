@@ -94,7 +94,7 @@
 .p-card[data-recolher] > h3, #dia-conteudo > h3, #calendario .cal-nav { padding-right:38px }
 .p-card.recolhido { padding-bottom:4px }
 #calendario.recolhido :is(.cal-grade,.cal-legenda),
-#dia-detalhe.recolhido #dia-conteudo > :not(h3),
+#dia-detalhe.recolhido #dia-conteudo > :not(h3):not(.p-reiniciar),
 #grafico.recolhido > :not(h3):not(.p-recolher) { display:none }
 .p-tudo { width:34px; height:34px; margin-left:6px; padding:0; border:2px solid #fff8; border-radius:50%; color:#fff; background:none; font-size:18px; cursor:pointer }
 /* Setinhas de tempo e recorde no calendário */
