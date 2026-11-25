@@ -79,6 +79,9 @@
     const n = estado.pacote.partidas.length + 1, indice = estado.pacote.jogos[n - 1], j = JOGOS[indice];
     jogo = { dia: sit.dia, n, indice, pistas: j.puzzle.slice(), solucao: j.solution.slice(), vals: j.puzzle.slice(), erros: 0, cor: null, sel: null, feitas: new Set(), moedas: 0, inicio: new Date().toISOString(), gastoMs: 0, desde: null, fimMs: null };
     tela.dataset.set = L.estiloDoJogo(sit.dia, n);
+    $('#nome-estilo').textContent = NOMES[tela.dataset.set];
+    $('#selo').replaceChildren(peca(1));
+    const placa = $('#placa'); placa.classList.remove('balanca'); void placa.offsetWidth; placa.classList.add('balanca');
     paleta.forEach((b, k) => { b.replaceChildren(peca(k)); b.firstElementChild.classList.replace('piece', 'pal-piece'); b.setAttribute('aria-pressed', 'false'); });
     tela.querySelector('.chest-coins').style.setProperty('--h', '0px');
     $('#etapa').textContent = `${n}/${L.JOGOS_POR_DIA}`;
@@ -114,6 +117,7 @@
     tabuleiro.parentElement.append(s); setTimeout(() => s.remove(), 1000);
   }
   const NOTAS = [523, 659, 784, 988];
+  const NOMES = { frutas: 'Feirinha de frutas', bichos: 'Amigos da trilha', tesouros: 'Caça ao tesouro', dinos: 'Ovos de dinossauro', carinhas: 'Bolinhas cantoras' };
   // Theo no topo: pula nas linhas certas, balança no erro, festeja no fim.
   function theo(r) { const t = $('#theo'); if (!t) return; t.classList.remove('yay', 'oops', 'festa'); void t.offsetWidth; t.classList.add(r); }
 
@@ -146,6 +150,7 @@
     setTimeout(() => {
       tabuleiro.classList.add('complete');
       theo('festa');
+      const bola = $('#bola-chute'); bola.classList.remove('vai'); void bola.offsetWidth; bola.classList.add('vai'); // bola chutada
       [...tabuleiro.children].forEach((c, i) => { if (i % 3 === 0) solta('star-pop', '✦', c); });
       [784, 988, 1175].forEach((f, i) => tom(f, i * .1, .3, .15));
       vibrar(40);

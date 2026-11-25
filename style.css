@@ -211,3 +211,45 @@ body { overflow:hidden; -webkit-tap-highlight-color:transparent; user-select:non
 
 /* Theo encostado no topo; tabuleiro sobe */
 #tela-partida .screen-body { justify-content:flex-start; padding-top:4px }
+
+/* Vida na partida: placa do estilo que balança, 1/6 ao vento, borboletas, raios de sol e peças respirando */
+#tela-partida .placa-estilo { display:flex; align-items:center; gap:8px; padding:5px 16px 5px 6px; border-radius:14px; font-size:20px; transform-origin:50% -30px }
+#tela-partida .placa-estilo.balanca { animation:balanca 1.6s cubic-bezier(.3,1.6,.5,1) }
+@keyframes balanca { 0% { transform:rotate(-8deg) } 30% { transform:rotate(6deg) } 55% { transform:rotate(-3deg) } 80% { transform:rotate(1deg) } 100% { transform:none } }
+.selo { display:grid; place-items:center; width:36px; height:36px; flex:none; padding:4px; border:3px solid #fff; border-radius:50%; background:radial-gradient(#fffbe9,#ffe08a); box-shadow:0 2px 0 #b9760c }
+.selo > * { width:100%; height:100%; object-fit:contain; animation:none!important; filter:none }
+.placa-estilo.balanca .selo { animation:seloPop .6s .2s cubic-bezier(.2,1.6,.4,1) both }
+@keyframes seloPop { 0% { transform:scale(.3) rotate(-30deg) } 100% { transform:none } }
+#tela-partida .theo-topo .step { transform-origin:50% -20px; animation:aoVento 3.2s ease-in-out infinite }
+@keyframes aoVento { 0%,100% { transform:rotate(6deg) } 50% { transform:rotate(-3deg) } }
+.vivo { position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none }
+.vivo::before { content:""; position:absolute; right:-45%; top:-45%; width:115%; aspect-ratio:1; border-radius:50%; background:repeating-conic-gradient(#fff6b055 0 6deg,transparent 6deg 18deg); -webkit-mask:radial-gradient(circle,#000 5%,transparent 60%); mask:radial-gradient(circle,#000 5%,transparent 60%); animation:spin 40s linear infinite }
+#tela-partida .screen-body { position:relative; z-index:1 }
+#tela-partida .board:not(.complete) .cell:not(.new):not(.unit-complete) .piece { animation:boia 3s ease-in-out calc(var(--i) * -190ms) infinite }
+@keyframes boia { 50% { transform:translateY(-2px) scale(1.03) } }
+@media (prefers-reduced-motion:reduce) { .vivo,#tela-partida .placa-estilo,#tela-partida .theo-topo .step,#tela-partida .piece { animation:none!important } }
+
+/* Bola de futebol: rola pelo gramado de vez em quando; sai chutada quando o tabuleiro fica pronto */
+.bola { position:absolute; font-style:normal; line-height:1; filter:drop-shadow(0 3px 2px #0005) }
+.bola.rola { bottom:2.5%; left:0; font-size:30px; animation:rolaBola 11s linear infinite }
+@keyframes rolaBola {
+  0%   { transform:translateX(-60px) translateY(0) rotate(0) }
+  10%  { transform:translateX(18vw) translateY(-26px) rotate(180deg) }
+  20%  { transform:translateX(38vw) translateY(0) rotate(360deg) }
+  28%  { transform:translateX(52vw) translateY(-12px) rotate(500deg) }
+  36%  { transform:translateX(66vw) translateY(0) rotate(640deg) }
+  50%  { transform:translateX(calc(100vw + 60px)) translateY(0) rotate(900deg) }
+  100% { transform:translateX(calc(100vw + 60px)) translateY(0) rotate(900deg) }
+}
+.bola.chute { left:8%; bottom:4%; font-size:40px; opacity:0 }
+.bola.chute.vai { animation:chute 1.2s cubic-bezier(.2,.7,.4,1) forwards }
+@keyframes chute {
+  0%   { opacity:1; transform:translate(0,0) scale(.8) rotate(0) }
+  45%  { opacity:1; transform:translate(40vw,-62vh) scale(1.3) rotate(540deg) }
+  100% { opacity:0; transform:translate(95vw,-30vh) scale(.6) rotate(1080deg) }
+}
+@media (prefers-reduced-motion:reduce) { .bola { display:none } }
+
+/* Bola proporcional à tela */
+.bola.rola { font-size:clamp(38px,12vw,64px); bottom:1.5% }
+.bola.chute { font-size:clamp(52px,16vw,86px) }
