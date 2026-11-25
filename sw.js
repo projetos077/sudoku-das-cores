@@ -8,6 +8,13 @@ self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {
   const u = new URL(e.request.url);
   if (e.request.method !== 'GET' || (u.origin !== location.origin && u.hostname !== 'cdn.jsdelivr.net')) return;
+  // Imagens: usa a cópia guardada na hora (abertura sem espera) e atualiza por trás.
+  if (/\.(jpe?g|png|svg|gif)$/.test(u.pathname)) {
+    const rede = fetch(e.request).then(r => { if (r.ok) { const copia = r.clone(); caches.open(CACHE).then(c => c.put(e.request, copia)); } return r; });
+    e.respondWith(caches.match(e.request).then(c => c || rede));
+    e.waitUntil(rede.catch(() => {}));
+    return;
+  }
   e.respondWith(fetch(e.request).then(r => {
     if (r.ok) { const copia = r.clone(); caches.open(CACHE).then(c => c.put(e.request, copia)); }
     return r;

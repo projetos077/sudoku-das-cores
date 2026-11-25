@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b6274">
   <title>Sudoku das Cores — Theo</title>
-  <link rel="stylesheet" href="style.css?v=19">
+  <link rel="stylesheet" href="style.css?v=20">
   <link rel="manifest" href="manifest-theo.json">
+  <link rel="preload" as="image" href="ilustracoes/abertura-vasco.jpg">
   <link rel="apple-touch-icon" href="icone-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
 </head>
@@ -16,6 +17,17 @@
     <img src="ilustracoes/abertura-vasco.jpg" alt="">
     <div class="abertura-titulo"><h1 class="sudoku-titulo"><span style="--c:var(--blue)">S</span><span style="--c:var(--yellow)">U</span><span style="--c:var(--green)">D</span><span style="--c:var(--purple)">O</span><span style="--c:var(--blue)">K</span><span style="--c:var(--yellow)">U</span></h1><p>do Theo</p></div>
   </div>
+  <script>
+  // A animação só começa com a imagem pronta (no celular ela pode demorar); sem imagem em 2,5 s, anima assim mesmo.
+  (() => {
+    const a = document.getElementById('abertura'), img = a.querySelector('img'), fim = () => a.remove();
+    const vai = () => a.classList.add('vai');
+    a.addEventListener('animationend', e => { if (e.animationName === 'aberturaSai') fim(); });
+    a.addEventListener('click', fim);
+    if (img.complete && img.naturalWidth) vai(); else { img.onload = img.onerror = vai; setTimeout(vai, 2500); }
+    setTimeout(fim, 9000);
+  })();
+  </script>
   <section class="phone trail-screen active" id="tela-trilha" aria-label="Trilha">
     <div class="mini-top"><span class="brand-dots" aria-hidden="true"><i style="--c:var(--blue)"></i><i style="--c:var(--yellow)"></i><i style="--c:var(--green)"></i><i style="--c:var(--purple)"></i></span><button class="settings" type="button" data-som aria-label="Desligar sons">⚙</button></div>
     <button class="trail-recados" id="abrir-recados" type="button" aria-label="Recados do papai" hidden>💬<i id="recado-novo" hidden></i></button>
@@ -66,7 +78,6 @@
   <script src="app.js?v=16"></script>
   <script>
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-  { const a = document.getElementById('abertura'), fim = () => a.remove(); a.addEventListener('animationend', e => { if (e.animationName === 'aberturaSai') fim(); }); a.addEventListener('click', fim); setTimeout(fim, 4000); }
   // Pareamento (uma vez) e envio dos dados do dia ao celular do pai.
   (async () => {
     const N = window.Nuvem, $ = s => document.querySelector(s);
