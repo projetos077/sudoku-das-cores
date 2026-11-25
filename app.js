@@ -61,6 +61,23 @@
     img.complete ? descer() : img.addEventListener('load', descer, { once: true });
   }
 
+  // Bandeira do Vasco no alto da trilha balançando: faixas da imagem por cima da bandeira desenhada,
+  // cada uma sobe e desce com atraso (onda); perto da haste quase não mexe.
+  (function balancarBandeira() {
+    const W = 1080, H = 1901, X0 = 662, X1 = 792, Y0 = 60, Y1 = 214, TIRAS = 20; // posição da bandeira na imagem (px)
+    const mapa = $('#mapa'), src = mapa.querySelector('img').getAttribute('src'), larg = (X1 - X0) / TIRAS;
+    for (let i = 0; i < TIRAS; i++) {
+      const x = X0 + i * larg, t = document.createElement('div');
+      t.className = 'bandeira-tira';
+      t.style.cssText = `left:${x / W * 100}%;top:${Y0 / H * 100}%;width:${larg / W * 100}%;height:${(Y1 - Y0) / H * 100}%;--a:${(0.3 + i * 0.14).toFixed(2)}px;--d:${(-i * 0.07).toFixed(2)}s`;
+      const img = document.createElement('img');
+      img.src = src; img.alt = '';
+      img.style.cssText = `width:${W / larg * 100}%;transform:translate(${-x / W * 100}%,${-Y0 / H * 100}%)`;
+      t.append(img);
+      mapa.append(t);
+    }
+  })();
+
   // ---------- partida ----------
   const tela = $('#tela-partida'), tabuleiro = $('#tabuleiro');
   const paleta = [...document.querySelectorAll('#paleta button:not(.eraser)')];
