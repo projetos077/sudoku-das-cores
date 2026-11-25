@@ -51,6 +51,19 @@
   // Pai: a criança já entrou?
   const criancaEntrou = async () => ((await sb.from('membros').select('papel').eq('papel', 'crianca')).data || []).length > 0;
 
+  // Pai já ligado: código para ligar outro aparelho/login do pai. O aparelho novo entra com entrarComoPai.
+  async function codigoPai() {
+    const { data, error } = await sb.rpc('codigo_pai');
+    if (error) throw error;
+    return data;
+  }
+  async function entrarComoPai(codigo) {
+    const { data, error } = await sb.rpc('entrar_como_pai', { p_codigo: String(codigo).trim() });
+    if (error) throw error;
+    if (data) await iniciar();
+    return data;
+  }
+
   // Criança: digita o código mostrado no celular do pai. Devolve true/false.
   async function entrarFamilia(codigo) {
     const { data, error } = await sb.rpc('entrar_familia', { p_codigo: String(codigo).trim() });
@@ -199,7 +212,7 @@
   }
 
   window.Nuvem = {
-    iniciar, quemSou: () => eu, criarFamilia, novoCodigo, criancaEntrou, entrarFamilia,
+    iniciar, quemSou: () => eu, criarFamilia, novoCodigo, criancaEntrou, entrarFamilia, codigoPai, entrarComoPai,
     sincronizar, lerPartidas, lerDias, ouvir, podeAvisar, ativarAvisos, reiniciarDia, reinicio,
   };
   window.Recados = { deQuem, tocar, gravar, enviar, situacao, podeGravar, APAGAR_APOS_OUVIR_MS };

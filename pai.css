@@ -107,3 +107,5 @@
 .p-topo { flex-wrap:wrap }
 .p-comp { margin:0 0 8px; font-size:13px }
 .p-comp span { display:inline-block; margin-top:3px; padding:1px 6px; border-radius:6px; color:#fff; font-weight:1000; white-space:nowrap }
+.p-recuperar { margin-top:14px; padding-top:12px; border-top:1px dashed #e1d3b5 }
+.p-recuperar input { display:block; width:9ch; margin:10px auto; padding:8px; border:3px solid #a96632; border-radius:12px; font:inherit; font-size:26px; font-weight:1000; letter-spacing:4px; text-align:center }

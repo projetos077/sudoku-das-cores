@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#075a6d">
   <title>SUDOKU - THEO · painel do pai</title>
   <link rel="stylesheet" href="style.css?v=2">
-  <link rel="stylesheet" href="pai.css?v=3">
+  <link rel="stylesheet" href="pai.css?v=4">
   <link rel="manifest" href="manifest-pai.json">
   <link rel="apple-touch-icon" href="icone-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,6 +20,16 @@
         <p class="p-empty" id="parear-passo">Gere um código e digite no celular do Theo, na tela "Celular do papai".</p>
         <div class="p-stars" id="codigo" hidden></div>
         <button class="next p-rec" id="gerar" type="button">Gerar código</button>
+        <div class="p-recuperar"><h3>Já uso este painel em outro lugar?</h3>
+          <p class="p-empty">No painel que já funciona, toque em "Ligar outro aparelho do pai" e digite aqui o código.</p>
+          <input id="cod-recuperar" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="\d{6}" aria-label="Código de 6 números">
+          <button class="next p-rec" id="recuperar" type="button">Entrar com o código</button>
+        </div>
+      </div>
+      <div class="p-card" id="cartao-outro" hidden><h3>Ligar outro aparelho do pai</h3>
+        <p class="p-empty" id="outro-texto">Para usar o painel em outro celular ou login, gere um código e digite lá, em "Já uso este painel em outro lugar".</p>
+        <div class="p-stars" id="cod-outro" hidden></div>
+        <button class="next p-rec" id="gerar-outro" type="button">Gerar código</button>
       </div>
       <div class="p-card" id="cartao-avisos" hidden><h3>Avisos</h3>
         <p class="p-empty" id="avisos-texto">Receba um aviso quando chegar recado do Theo ou ele terminar o dia.</p>
@@ -49,7 +59,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="logica.js"></script>
   <script src="recados.js?v=2"></script>
-  <script src="nuvem.js?v=2"></script>
+  <script src="nuvem.js?v=3"></script>
   <script src="conversa.js?v=2"></script>
   <script>
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
@@ -79,12 +89,25 @@
           $('#gerar').textContent = 'Gerar outro código';
         } catch (e) { avisar(/já existe uma família/.test(e && e.message) ? 'O Theo já tem uma família ligada a outro login do pai. Abra o painel onde ele foi ligado da primeira vez (Safari ou ícone da Tela de Início).' : 'Não consegui gerar o código. Tente de novo.'); }
       });
+      $('#recuperar').addEventListener('click', async () => {
+        const ok = await N.entrarComoPai($('#cod-recuperar').value).catch(() => false);
+        if (ok) location.reload(); else avisar('Código não aceito. Gere um novo no painel que já funciona (vale 15 minutos).');
+      });
       const esperar = setInterval(async () => {
         if (N.quemSou() && await N.criancaEntrou()) { clearInterval(esperar); location.reload(); }
       }, 3000);
       return;
     }
     if (eu.papel !== 'pai') return avisar('Este aparelho está ligado como celular do Theo.');
+
+    // Ligar outro aparelho do pai (recuperação do painel).
+    if (!simulador) {
+      $('#cartao-outro').hidden = false;
+      $('#gerar-outro').addEventListener('click', async () => {
+        try { $('#cod-outro').textContent = await N.codigoPai(); $('#cod-outro').hidden = false; $('#outro-texto').textContent = 'Digite este código no outro aparelho. Vale 15 minutos e só serve uma vez.'; $('#gerar-outro').textContent = 'Gerar outro código'; }
+        catch { avisar('Não consegui gerar o código. Tente de novo.'); }
+      });
+    }
 
     // Avisos: no iPhone só funcionam com o app aberto pelo ícone da Tela de Início.
     if (!simulador) {
