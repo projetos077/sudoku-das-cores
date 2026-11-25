@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#075a6d">
-  <title>Sudoku das Cores — painel do pai</title>
+  <title>SUDOKU - THEO · painel do pai</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="pai.css">
   <link rel="manifest" href="manifest-pai.json">
@@ -14,7 +14,7 @@
 </head>
 <body>
   <section class="phone parent-screen active" aria-label="Painel do pai">
-    <div class="parent-top"><span class="brand-dots" aria-hidden="true"><i style="--c:var(--blue)"></i><i style="--c:var(--yellow)"></i><i style="--c:var(--green)"></i><i style="--c:var(--purple)"></i></span><b id="titulo">Theo</b><small id="data"></small></div>
+    <div class="parent-top"><svg class="vasco" viewBox="0 0 32 32" aria-hidden="true"><defs><clipPath id="vasco-c"><circle cx="16" cy="16" r="15"/></clipPath></defs><g clip-path="url(#vasco-c)"><rect width="32" height="32" fill="#111"/><path d="M-4 30 30-4 38 4 4 38z" fill="#fff"/><path d="M20.4 11.6l-1.4-4.4h6l-1.4 4.4 4.4-1.4v6l-4.4-1.4 1.4 4.4h-6l1.4-4.4-4.4 1.4v-6z" fill="#e0262b"/></g><circle cx="16" cy="16" r="15" fill="none" stroke="#fff" stroke-width="1.5"/></svg><b id="titulo">SUDOKU - THEO</b><small id="data"></small></div>
     <div class="parent-body">
       <div class="p-card" id="parear" hidden><h3>Ligar ao celular do Theo</h3>
         <p class="p-empty" id="parear-passo">Gere um código e digite no celular do Theo, na tela "Celular do papai".</p>
@@ -32,8 +32,17 @@
         <p class="cal-legenda"><span class="d-verde">✓</span> completo <span class="d-amarelo">◐</span> incompleto <span class="d-cinza">–</span> não jogou <i class="cal-aviso"></i> mais de <b id="limite-aviso"></b> erros num jogo</p>
       </div>
       <div class="p-card" id="dia-detalhe" hidden></div>
-      <div class="p-card" id="grafico" hidden><h3>Evolução</h3><div id="grafico-estrelas"></div><div id="grafico-tempo"></div></div>
-      <div class="p-card" id="cartao-recados"><h3>Recados</h3><div id="recados-theo"></div><p class="p-empty" id="sem-recado">Nenhum recado novo do Theo.</p><button class="next p-rec" id="gravar" type="button">● Gravar recado para o Theo</button><button class="next p-rec p-enviar" id="enviar" type="button" hidden>➜ Enviar recado</button><p class="p-note">Cada áudio é apagado 15 s depois de ouvido.</p></div>
+      <div class="p-card" id="grafico" hidden><h3>Evolução</h3>
+        <div class="g-kpis" id="g-kpis"></div>
+        <div class="g-filtros">
+          <div class="g-seg" id="g-medida" role="group" aria-label="O que mostrar"><button type="button" data-v="tempo">Tempo</button><button type="button" data-v="erros">Erros</button><button type="button" data-v="estrelas">Estrelas</button></div>
+          <div class="g-seg" id="g-periodo" role="group" aria-label="Período"><button type="button" data-v="7">7 dias</button><button type="button" data-v="30">30 dias</button><button type="button" data-v="0">Tudo</button></div>
+        </div>
+        <p class="g-titulo" id="g-titulo"></p>
+        <div class="g-area"><svg id="g-svg" role="img"></svg><div class="g-dica" id="g-dica" hidden></div></div>
+        <p class="p-note" id="g-nota"></p>
+      </div>
+      <div class="p-card" id="cartao-recados"><h3>Recados</h3><div class="wa-caixa p-conversa" id="conversa"></div><p class="p-note">Cada áudio é apagado 15 s depois de ouvido.</p></div>
       <p class="p-note" id="aviso" hidden></p>
     </div>
   </section>
@@ -41,6 +50,7 @@
   <script src="logica.js"></script>
   <script src="recados.js"></script>
   <script src="nuvem.js"></script>
+  <script src="conversa.js"></script>
   <script>
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
   (async () => {
@@ -166,24 +176,101 @@
       } catch { avisar('Não consegui reiniciar. Tente de novo.'); }
     }
 
-    // Evolução por dia de jogo (últimos 14): estrelas do dia e tempo de cada jogo com a média do dia.
-    function grafico() {
-      const etapas = [...new Set(dados.jogos.map(j => j.etapa))].sort((a, b) => a - b).slice(-14);
-      $('#grafico').hidden = !etapas.length;
-      if (!etapas.length) return;
-      const W = 300, H = 80, w = W / etapas.length, x = i => i * w + w / 2;
-      const rotulos = etapas.map((e, i) => `<text x="${x(i)}" y="${H + 13}" text-anchor="middle" font-size="9" fill="#708078">D${e}</text>`).join('');
-      const est = etapas.map(e => (dados.dias.find(d => d.etapa === e) || {}).estrelas || 0);
-      $('#grafico-estrelas').innerHTML = `<p class="p-empty">Estrelas por dia</p><svg viewBox="0 0 ${W} ${H + 16}" class="p-svg">${est.map((v, i) => `<rect x="${x(i) - w * .3}" y="${H - v / 3 * H}" width="${w * .6}" height="${v / 3 * H}" rx="3" fill="#ffbf26"><title>${v} estrelas</title></rect>`).join('')}${rotulos}</svg>`;
-      const porEtapa = etapas.map(e => dados.jogos.filter(j => j.etapa === e).map(j => j.duracaoMs / 60000));
-      const max = Math.max(L.LIMITE_MEDIA_MS / 60000, ...porEtapa.flat()) * 1.1, y = v => H - v / max * H;
-      const media = porEtapa.map(t => t.reduce((s, v) => s + v, 0) / t.length);
-      $('#grafico-tempo').innerHTML = `<p class="p-empty">Tempo por jogo (min) · linha = média do dia · tracejado = meta de ${L.LIMITE_MEDIA_MS / 60000} min</p><svg viewBox="0 0 ${W} ${H + 16}" class="p-svg">
-        <line x1="0" x2="${W}" y1="${y(L.LIMITE_MEDIA_MS / 60000)}" y2="${y(L.LIMITE_MEDIA_MS / 60000)}" stroke="#1f8a3f" stroke-dasharray="4 4"/>
-        ${porEtapa.map((t, i) => t.map(v => `<circle cx="${x(i)}" cy="${y(v)}" r="2.5" fill="#4b8197" opacity=".45"/>`).join('')).join('')}
-        <polyline points="${media.map((v, i) => `${x(i)},${y(v)}`).join(' ')}" fill="none" stroke="#075a6d" stroke-width="2.5"/>
-        ${media.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="3.5" fill="#075a6d"><title>média ${tempo(v * 60000)}</title></circle>`).join('')}${rotulos}</svg>`;
+    // Evolução: um dia de jogo por ponto. Uma medida por vez (um eixo só), período escolhido, toque mostra o dia.
+    let medida = 'tempo', periodo = 30;
+    const MEDIDAS = {
+      tempo: { titulo: 'Tempo médio por jogo (min) · menor é melhor', valor: d => d.tempoMin, fmt: v => tempo(v * 60000), meta: L.LIMITE_MEDIA_MS / 60000, metaTxt: `meta ${L.LIMITE_MEDIA_MS / 60000} min`, tipo: 'linha', menorMelhor: true },
+      erros: { titulo: 'Erros no dia (soma dos jogos) · menor é melhor', valor: d => d.erros, fmt: v => `${v} erro${v === 1 ? '' : 's'}`, meta: L.LIMITE_ERROS, metaTxt: `limite ${L.LIMITE_ERROS}`, tipo: 'barra', menorMelhor: true },
+      estrelas: { titulo: 'Estrelas do dia (só dias completos)', valor: d => d.estrelas, fmt: v => v == null ? 'dia incompleto' : `${v} estrela${v === 1 ? '' : 's'}`, meta: null, tipo: 'barra', max: 3 },
+    };
+    function serieDias() {
+      const etapas = [...new Set(dados.jogos.map(j => j.etapa))].sort((a, b) => a - b);
+      return etapas.map(e => {
+        const js = dados.jogos.filter(j => j.etapa === e), dia = dados.dias.find(d => d.etapa === e);
+        const fim = dia ? dia.fim : js.map(j => j.fim).sort().pop();
+        return { etapa: e, data: L.dataDe(fim), jogos: js.length, tempoMin: js.reduce((s, j) => s + j.duracaoMs, 0) / js.length / 60000,
+          erros: js.reduce((s, j) => s + j.erros, 0), estrelas: dia ? dia.estrelas : null, aviso: js.some(j => j.erros > L.AVISO_ERROS_JOGO) };
+      });
     }
+    const dm = iso => iso.split('-').reverse().slice(0, 2).join('/');
+    // Mudança do início para o fim do período: média dos 3 primeiros dias contra a dos 3 últimos.
+    function variacao(vals, menorMelhor) {
+      vals = vals.filter(v => v != null);
+      if (vals.length < 4) return '';
+      const k = Math.min(3, Math.floor(vals.length / 2)), media = a => a.reduce((s, v) => s + v, 0) / a.length;
+      const ini = media(vals.slice(0, k)), fim = media(vals.slice(-k));
+      if (!ini) return '';
+      const pct = Math.round((fim - ini) / ini * 100), melhor = menorMelhor ? pct < 0 : pct > 0;
+      if (Math.abs(pct) < 5) return '<small class="g-var">→ estável</small>';
+      return `<small class="g-var ${melhor ? 'bom' : 'ruim'}">${pct < 0 ? '↓' : '↑'} ${Math.abs(pct)}% ${melhor ? 'melhorou' : 'piorou'}</small>`;
+    }
+    function grafico() {
+      const todos = serieDias();
+      $('#grafico').hidden = !todos.length;
+      if (!todos.length) return;
+      const corte = periodo ? (() => { const d = new Date(hoje + 'T12:00:00'); d.setDate(d.getDate() - periodo + 1); return L.dataLocal(d); })() : '';
+      const dias = todos.filter(d => d.data >= corte);
+      document.querySelectorAll('#g-medida button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === medida)));
+      document.querySelectorAll('#g-periodo button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === periodo)));
+      const media = a => (a = a.filter(v => v != null)).length ? a.reduce((s, v) => s + v, 0) / a.length : null;
+      const est = media(dias.map(d => d.estrelas)), tmed = media(dias.map(d => d.tempoMin)), emed = media(dias.map(d => d.erros));
+      $('#g-kpis').innerHTML = `
+        <div><b>${tmed == null ? '–' : tempo(tmed * 60000)}</b><span>tempo médio por jogo</span>${variacao(dias.map(d => d.tempoMin), true)}</div>
+        <div><b>${emed == null ? '–' : emed.toFixed(1).replace('.', ',')}</b><span>erros por dia</span>${variacao(dias.map(d => d.erros), true)}</div>
+        <div><b>${est == null ? '–' : est.toFixed(1).replace('.', ',') + ' ★'}</b><span>estrelas por dia</span>${variacao(dias.map(d => d.estrelas), false)}</div>
+        <div><b>${dias.filter(d => d.estrelas != null).length}<small>/${dias.length}</small></b><span>dias completos</span></div>`;
+      const M = MEDIDAS[medida], svg = $('#g-svg'), dica = $('#g-dica');
+      $('#g-titulo').textContent = M.titulo;
+      dica.hidden = true;
+      if (!dias.length) { svg.innerHTML = ''; $('#g-nota').textContent = 'Nenhum dia jogado neste período.'; return; }
+      $('#g-nota').textContent = medida === 'erros' ? '● laranja: algum jogo do dia passou de ' + L.AVISO_ERROS_JOGO + ' erros.' : '';
+      const W = 340, H = 190, ml = 34, mr = 8, mt = 12, mb = 26, iw = W - ml - mr, ih = H - mt - mb;
+      const vals = dias.map(M.valor);
+      let max = M.max || Math.max(M.meta || 0, ...vals.filter(v => v != null)) * 1.15 || 1;
+      const passo = M.max ? 1 : [0.5, 1, 2, 5, 10, 20].find(s => max / s <= 5) || 50;
+      max = Math.ceil(max / passo) * passo;
+      const y = v => mt + ih - v / max * ih, banda = iw / dias.length, x = i => ml + banda * i + banda / 2;
+      let g = '';
+      for (let v = 0; v <= max + 1e-9; v += passo) g += `<line x1="${ml}" x2="${W - mr}" y1="${y(v)}" y2="${y(v)}" class="g-grade"/><text x="${ml - 6}" y="${y(v) + 4}" text-anchor="end" class="g-eixo">${medida === 'estrelas' ? v + '★' : +v.toFixed(1)}</text>`;
+      const pulo = Math.ceil(dias.length / 7);
+      dias.forEach((d, i) => { if ((dias.length - 1 - i) % pulo === 0) g += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle" class="g-eixo">${dm(d.data)}</text>`; });
+      if (M.tipo === 'barra') {
+        const w = Math.min(28, banda * .62), r = Math.min(4, w / 2);
+        dias.forEach((d, i) => {
+          const v = vals[i];
+          if (v == null) { g += `<circle cx="${x(i)}" cy="${y(0) - 5}" r="4" class="g-vazio"/>`; return; }
+          const top = y(v), h = y(0) - top;
+          if (h > 0) g += `<path class="g-barra${d.data === escolhido ? ' sel' : ''}" d="M${x(i) - w / 2},${y(0)}V${top + r}q0,-${r} ${r},-${r}h${w - 2 * r}q${r},0 ${r},${r}V${y(0)}z"/>`;
+          if (medida === 'erros' && d.aviso) g += `<circle cx="${x(i)}" cy="${top - 8}" r="4.5" class="g-aviso"/>`;
+        });
+      } else {
+        const pts = dias.map((d, i) => `${x(i)},${y(vals[i])}`).join(' ');
+        g += `<polyline points="${pts}" class="g-linha"/>`;
+        dias.forEach((d, i) => { g += `<circle cx="${x(i)}" cy="${y(vals[i])}" r="${d.data === escolhido ? 6 : 4.5}" class="g-ponto${d.data === escolhido ? ' sel' : ''}"/>`; });
+      }
+      if (M.meta != null) g += `<line x1="${ml}" x2="${W - mr}" y1="${y(M.meta)}" y2="${y(M.meta)}" class="g-meta"/><text x="${ml + 4}" y="${y(M.meta) - 4}" class="g-meta-txt" paint-order="stroke">${M.metaTxt}</text>`;
+      // Rótulo direto só no último ponto (o resto fica no toque).
+      const ult = vals.length - 1;
+      const lado = M.tipo === 'linha' && dias.length > 1;
+      if (vals[ult] != null) g += `<text x="${x(ult) - (lado ? 8 : 0)}" y="${y(vals[ult]) - (medida === 'erros' && dias[ult].aviso ? 16 : 6)}" text-anchor="${lado ? 'end' : 'middle'}" class="g-rotulo">${medida === 'tempo' ? tempo(vals[ult] * 60000) : vals[ult]}</text>`;
+      dias.forEach((d, i) => { g += `<rect x="${ml + banda * i}" y="${mt}" width="${banda}" height="${ih}" class="g-alvo" data-i="${i}"/>`; });
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      svg.setAttribute('aria-label', M.titulo);
+      svg.innerHTML = g;
+      const mostrarDica = i => {
+        const d = dias[i], area = svg.getBoundingClientRect(), esc = area.width / W;
+        dica.innerHTML = `<b>${dm(d.data)} · Dia ${d.etapa}</b>${M.fmt(vals[i])}<small>${d.jogos} de ${L.JOGOS_POR_DIA} jogos · toque para ver o dia</small>`;
+        dica.hidden = false;
+        dica.style.left = Math.max(0, Math.min(area.width - dica.offsetWidth, x(i) * esc - dica.offsetWidth / 2)) + 'px';
+      };
+      svg.querySelectorAll('.g-alvo').forEach(r => {
+        r.addEventListener('pointerenter', () => mostrarDica(+r.dataset.i));
+        r.addEventListener('click', () => { escolhido = dias[+r.dataset.i].data; mes = new Date(escolhido + 'T12:00:00'); mes.setDate(1); desenhar(); $('#dia-detalhe').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); });
+      });
+      svg.onpointerleave = () => { dica.hidden = true; };
+    }
+    document.querySelectorAll('#g-medida button').forEach(b => b.addEventListener('click', () => { medida = b.dataset.v; grafico(); }));
+    document.querySelectorAll('#g-periodo button').forEach(b => b.addEventListener('click', () => { periodo = +b.dataset.v; grafico(); }));
 
     $('#cal-grade').addEventListener('click', e => {
       const b = e.target.closest('.cal-dia');
@@ -195,48 +282,13 @@
     $('#mes-antes').addEventListener('click', () => { mes.setMonth(mes.getMonth() - 1); desenhar(); });
     $('#mes-depois').addEventListener('click', () => { mes.setMonth(mes.getMonth() + 1); desenhar(); });
 
-    async function listarRecados() {
-      const lista = $('#recados-theo');
-      let recados = [];
-      try { recados = await window.Recados.deQuem('theo'); } catch { /* sem rede */ }
-      lista.replaceChildren();
-      $('#sem-recado').hidden = recados.length > 0;
-      recados.forEach(r => {
-        const linha = document.createElement('div');
-        linha.className = 'msg p-msg';
-        linha.innerHTML = '<span class="avatar">T</span><button class="play-btn" type="button" aria-label="Ouvir recado do Theo">▶</button><span class="wave"><i></i></span><span class="count" aria-hidden="true"></span>';
-        const barra = linha.querySelector('.wave i'), conta = linha.querySelector('.count');
-        linha.querySelector('.play-btn').onclick = () => window.Recados.tocar(r, {
-          aoProgresso: p => { barra.style.width = p * 100 + '%'; },
-          aoContar: s => { conta.textContent = s; conta.style.setProperty('--p', (1 - s * 1000 / window.Recados.APAGAR_APOS_OUVIR_MS) * 100 + '%'); },
-          aoApagar: listarRecados
-        });
-        lista.append(linha);
-      });
-    }
-    // Gravar e enviar são botões separados.
-    let parar = null, gravado = null;
-    $('#gravar').hidden = !window.Recados.podeGravar();
-    $('#gravar').addEventListener('click', async e => {
-      const b = e.currentTarget;
-      if (parar) { gravado = await parar(); parar = null; b.textContent = '● Gravar de novo'; $('#enviar').hidden = false; return; }
-      try { gravado = null; $('#enviar').hidden = true; parar = await window.Recados.gravar('pai'); b.textContent = '■ Parar gravação'; }
-      catch { b.textContent = 'Microfone indisponível'; }
-    });
-    $('#enviar').addEventListener('click', async e => {
-      const b = e.currentTarget;
-      if (!gravado) return;
-      b.disabled = true;
-      try { await gravado.enviar(); gravado = null; b.hidden = true; $('#gravar').textContent = '✓ Enviado · ● Gravar outro'; }
-      catch { b.textContent = 'Não enviou. Tocar de novo'; }
-      b.disabled = false;
-    });
+    // Recados: a mesma conversa do app do Theo (conversa.js).
+    const conversa = window.Conversa($('#conversa'), { eu: 'pai', nomeOutro: 'o Theo', inicialOutro: 'T', corOutro: '#bf6234', inicialEu: 'P' });
 
     const atualizar = async () => { try { dados = simulador ? local() : await carregar(); escolhido ||= dados.jogos.map(j => L.dataDe(j.fim)).sort().pop() || null; desenhar(); } catch { avisar('Não consegui carregar os dados.'); } };
     // Recado apagado depois de ouvido também gera aviso; listar de novo é barato.
-    if (!simulador) N.ouvir(() => { atualizar(); listarRecados(); });
+    if (!simulador) N.ouvir(() => { atualizar(); conversa.atualizar(); });
     atualizar();
-    listarRecados();
   })();
   </script>
 </body>

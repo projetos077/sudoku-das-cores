@@ -50,6 +50,9 @@
       if (feito) { const s = document.createElement('span'); s.className = 'node-stars'; s.textContent = '★'.repeat(feito.estrelas.total); n.append(s); }
       mapa.append(n);
     });
+    // Recados: depois do dia concluído (NORMA 4); bolinha quando há recado novo do papai.
+    $('#abrir-recados').hidden = sit.modo !== 'amanha';
+    if (sit.modo === 'amanha') window.Recados.deQuem('pai').then(r => { $('#recado-novo').hidden = !r.some(x => !x.ouvido_em); }).catch(() => {});
     const jogar = $('#jogar');
     jogar.disabled = sit.modo === 'amanha';
     jogar.innerHTML = sit.modo === 'amanha' ? 'Até amanhã <span aria-hidden="true">🌙</span>' : 'Jogar <span aria-hidden="true">▶</span>';
@@ -253,80 +256,19 @@
   $('#ate-amanha').addEventListener('click', abrirRecados);
 
   // ---------- recados ----------
-  // Recado do Theo em 3 etapas visíveis: gravar → enviar → papai ouviu.
-  const ULTIMO_RECADO = 'sudoku-theo-meu-recado'; // id do último recado enviado, para mostrar se o papai ouviu
-  const TEXTOS = {
-    inicio: 'Toque no microfone para gravar',
-    gravando: 'Gravando… toque no quadrado para parar',
-    gravado: 'Gravou! Toque na seta verde para enviar',
-    enviando: 'Enviando…',
-    erro: 'Não enviou. Toque na seta verde de novo',
-    enviado: 'Enviado! Esperando o papai ouvir…',
-    ouvido: 'O papai ouviu! 🎉',
-  };
-  let pararGravacao = null, gravado = null, relogioGravacao = null, vigia = null;
-  function etapa(estado) {
-    $('#gravacao').dataset.estado = estado;
-    $('#microfone-texto').textContent = TEXTOS[estado];
-    $('#microfone').setAttribute('aria-label', estado === 'gravando' ? 'Parar de gravar' : 'Gravar recado para o papai');
-  }
-  // Enquanto a tela está aberta, pergunta de tempos em tempos se o papai já ouviu.
-  async function conferirOuvido(festejar) {
-    const id = localStorage.getItem(ULTIMO_RECADO);
-    if (!id || pararGravacao || gravado) return;
-    let sit = null;
-    try { sit = await window.Recados.situacao(isNaN(id) ? id : Number(id)); } catch { return; }
-    if (!sit || pararGravacao || gravado) return;
-    const antes = $('#gravacao').dataset.estado;
-    etapa(sit);
-    if (sit === 'ouvido' && antes === 'enviado' && festejar) { [659, 784, 1047].forEach((f, i) => tom(f, i * .12, .3)); vibrar([60, 40, 120]); }
-  }
-  async function abrirRecados() {
+  // Conversa no estilo WhatsApp (conversa.js): o Theo grava, envia, ouve o que mandou e vê ✓✓ quando o papai ouve.
+  let conversa = null;
+  function abrirRecados() {
     mostrar('tela-recado');
-    $('#recado-ouvido').hidden = true;
-    $('#barra').style.width = '0';
-    $('#contagem').textContent = '';
-    $('#gravacao').hidden = !window.Recados.podeGravar();
-    gravado = null;
-    etapa('inicio');
-    conferirOuvido(false);
-    clearInterval(vigia);
-    vigia = setInterval(() => $('#tela-recado').classList.contains('active') ? conferirOuvido(true) : clearInterval(vigia), 4000);
-    let recado = null;
-    try { [recado] = await window.Recados.deQuem('pai'); } catch { /* sem armazenamento de áudio */ }
-    $('#recado-pai').hidden = !recado;
-    $('#sem-recado-pai').hidden = !!recado;
-    $('#ouvir').onclick = () => recado && window.Recados.tocar(recado, {
-      aoProgresso: p => { $('#barra').style.width = p * 100 + '%'; },
-      aoContar: s => { $('#contagem').textContent = s; $('#contagem').style.setProperty('--p', (1 - s * 1000 / window.Recados.APAGAR_APOS_OUVIR_MS) * 100 + '%'); },
-      aoApagar: () => { $('#recado-pai').hidden = true; $('#recado-ouvido').hidden = false; }
+    conversa = conversa || window.Conversa($('#conversa'), {
+      eu: 'theo', nomeOutro: 'o papai', inicialOutro: 'P', corOutro: '#4b8197', inicialEu: 'T',
+      som: q => ({ gravar: () => tom(659), enviado: () => { tom(784); tom(1047, .12); }, ouvido: () => [659, 784, 1047].forEach((f, i) => tom(f, i * .12, .3)), apagar: () => tom(330) })[q](),
+      aoOuvido: () => vibrar([60, 40, 120]),
     });
+    conversa.atualizar();
   }
-  $('#microfone').addEventListener('click', async () => {
-    if (pararGravacao) {
-      clearInterval(relogioGravacao);
-      gravado = await pararGravacao(); pararGravacao = null;
-      return etapa('gravado');
-    }
-    try { gravado = null; pararGravacao = await window.Recados.gravar('theo'); }
-    catch { $('#microfone-texto').textContent = 'Microfone indisponível'; return; }
-    etapa('gravando');
-    const inicio = Date.now();
-    $('#tempo-gravacao').textContent = '0:00';
-    relogioGravacao = setInterval(() => { const s = Math.floor((Date.now() - inicio) / 1000); $('#tempo-gravacao').textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }, 250);
-  });
-  $('#ouvir-meu').addEventListener('click', () => { if (gravado) { const a = new Audio(URL.createObjectURL(gravado.blob)); a.onended = () => URL.revokeObjectURL(a.src); a.play(); } });
-  $('#enviar').addEventListener('click', async () => {
-    if (!gravado || $('#gravacao').dataset.estado === 'enviando') return;
-    etapa('enviando');
-    try {
-      const id = await gravado.enviar();
-      gravado = null;
-      if (id != null) localStorage.setItem(ULTIMO_RECADO, id);
-      etapa('enviado'); tom(784); tom(1047, .12);
-    } catch { etapa('erro'); }
-  });
   $('#voltar-trilha').addEventListener('click', () => { desenharTrilha(); mostrar('tela-trilha'); });
+  $('#abrir-recados').addEventListener('click', abrirRecados);
 
   $('#jogar').addEventListener('click', comecarPartida);
   if (!Array.isArray(JOGOS) || JOGOS.length !== 120) { $('#jogar').disabled = true; $('#jogar').textContent = 'Jogos não carregados'; }

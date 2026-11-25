@@ -129,29 +129,34 @@
   // iPhone só grava audio/mp4; o Chrome do S23 também aceita. Assim um toca o do outro.
   const formato = () => ['audio/mp4', 'audio/webm'].find(t => MediaRecorder.isTypeSupported(t)) || '';
 
-  async function gravar(de) {
+  // Grava; devolve uma função que para e entrega o áudio (Blob). Enviar é outro passo.
+  async function gravar() {
     if (!eu) throw new Error('aparelho não pareado');
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const tipo = formato();
     const rec = new MediaRecorder(stream, tipo ? { mimeType: tipo } : {}), partes = [];
-    rec.ondataavailable = e => partes.push(e.data);
+    rec.ondataavailable = e => { if (e.data && e.data.size) partes.push(e.data); };
     rec.start();
-    // Parar devolve { enviar }: gravar e enviar são toques separados.
-    return () => new Promise(ok => {
+    return () => new Promise((ok, erro) => {
       rec.onstop = () => {
         stream.getTracks().forEach(t => t.stop());
-        const mime = (rec.mimeType || 'audio/mp4').split(';')[0], blob = new Blob(partes, { type: mime });
-        ok({ blob, enviar: async () => {
-          const caminho = `${eu.familia_id}/${crypto.randomUUID()}.${mime === 'audio/webm' ? 'webm' : 'm4a'}`;
-          const up = await sb.storage.from('recados').upload(caminho, blob, { contentType: mime });
-          if (up.error) throw up.error;
-          const { data, error } = await sb.from('recados').insert({ familia_id: eu.familia_id, de: papel(de), caminho }).select('id').single();
-          if (error) throw error;
-          return data.id;
-        } });
+        const mime = (rec.mimeType || tipo || 'audio/mp4').split(';')[0];
+        partes.length ? ok(new Blob(partes, { type: mime })) : erro(new Error('gravação vazia'));
       };
       rec.stop();
     });
+  }
+
+  // Sobe o áudio e cria o recado; devolve o id.
+  async function enviar(de, blob) {
+    if (!eu) throw new Error('aparelho não pareado');
+    const mime = (blob.type || 'audio/mp4').split(';')[0];
+    const caminho = `${eu.familia_id}/${crypto.randomUUID()}.${mime === 'audio/webm' ? 'webm' : 'm4a'}`;
+    const up = await sb.storage.from('recados').upload(caminho, blob, { contentType: mime });
+    if (up.error) throw up.error;
+    const { data, error } = await sb.from('recados').insert({ familia_id: eu.familia_id, de: papel(de), caminho }).select('id').single();
+    if (error) throw error;
+    return data.id;
   }
 
   // Recado enviado: 'enviado' (ainda não ouvido) ou 'ouvido' (ouvido, ou já apagado depois de ouvido).
@@ -193,5 +198,5 @@
     iniciar, quemSou: () => eu, criarFamilia, novoCodigo, criancaEntrou, entrarFamilia,
     sincronizar, lerPartidas, lerDias, ouvir, podeAvisar, ativarAvisos, reiniciarDia, reinicio,
   };
-  window.Recados = { deQuem, tocar, gravar, situacao, podeGravar, APAGAR_APOS_OUVIR_MS };
+  window.Recados = { deQuem, tocar, gravar, enviar, situacao, podeGravar, APAGAR_APOS_OUVIR_MS };
 })();

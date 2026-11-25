@@ -46,6 +46,39 @@
 .p-est { color:#ffbf26; letter-spacing:1px; white-space:nowrap }
 .p-est span { color:#ddd1b8 }
 .p-alerta { padding:2px 6px; border-radius:6px; color:#fff; background:#ff8a1f; font-size:11px; font-weight:1000; white-space:nowrap }
-.p-svg { display:block; width:100%; height:auto; margin:2px 0 10px }
 .p-enviar { margin-top:8px; background:linear-gradient(#3fd06a,#1f9c45) }
 .p-reiniciar { margin-top:10px; background:linear-gradient(#f0a13a,#d27a17); box-shadow:0 4px 0 #9a560c }
+.p-conversa { height:420px; margin:0 -12px; overflow:hidden; border-radius:0 0 14px 14px }
+.p-conversa .wa-bolha { min-width:220px }
+/* Gráfico de evolução */
+.g-kpis { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px }
+.g-kpis > div { display:flex; flex-direction:column; padding:8px 10px; border-radius:10px; background:#f7f2e6 }
+.g-kpis b { font-size:20px; line-height:1.2 }
+.g-kpis b small { color:#708078; font-size:13px }
+.g-kpis span { color:#708078; font-size:11px; font-weight:700 }
+.g-var { margin-top:2px; font-size:12px; font-weight:1000; color:#54656f }
+.g-var.bom { color:#1f7a3a } .g-var.ruim { color:#b3402f }
+.g-filtros { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px }
+.g-seg { display:flex; padding:2px; border-radius:10px; background:#eee5d3 }
+.g-seg button { padding:6px 10px; border:0; border-radius:8px; color:#54656f; background:none; font:inherit; font-size:12px; font-weight:1000; cursor:pointer }
+.g-seg button[aria-pressed="true"] { color:var(--ink); background:#fff; box-shadow:0 1px 2px #0002 }
+.g-titulo { margin:4px 0 0; color:var(--ink); font-size:13px; font-weight:1000 }
+.g-area { position:relative }
+#g-svg { display:block; width:100%; height:auto; overflow:visible }
+.g-grade { stroke:#ece3d1; stroke-width:1 }
+.g-eixo { fill:#8a8f88; font-size:10px }
+.g-meta { stroke:#1f8a3f; stroke-width:1.5; stroke-dasharray:5 4 }
+.g-meta-txt { fill:#1f7a3a; font-size:10px; font-weight:700; stroke:#fff; stroke-width:3px }
+.g-barra { fill:#2f8fa8 }
+.g-barra.sel { fill:#075a6d }
+.g-linha { fill:none; stroke:#2f8fa8; stroke-width:2; stroke-linejoin:round }
+.g-ponto { fill:#2f8fa8; stroke:#fff; stroke-width:2 }
+.g-ponto.sel { fill:#075a6d }
+.g-vazio { fill:none; stroke:#b9b2a3; stroke-width:1.5; stroke-dasharray:2 2 }
+.g-aviso { fill:#ff8a1f; stroke:#fff; stroke-width:1.5 }
+.g-rotulo { fill:var(--ink); font-size:11px; font-weight:1000 }
+.g-alvo { fill:transparent; cursor:pointer }
+.g-dica { position:absolute; top:0; z-index:2; display:flex; flex-direction:column; min-width:130px; padding:7px 10px; border-radius:10px; color:#fff; background:#173b54ee; font-size:13px; pointer-events:none }
+.g-dica small { color:#cfe0e8; font-size:10px }
+.parent-top .vasco { width:34px; height:34px; flex:none; filter:drop-shadow(0 1px 2px #0006) }
+.parent-top b { letter-spacing:1px }
