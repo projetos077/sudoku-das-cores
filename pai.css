@@ -20,5 +20,32 @@
 .p-note { margin:8px 0 0; color:#708078; font-size:11px; text-align:center }
 .parent-screen .msg { margin-bottom:8px }
 .p-empty { margin:0; color:#708078; font-size:13px }
-.p-day { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f0e6d2; font-size:13px }
-.p-day b { color:#ffbf26; letter-spacing:2px }
+/* Calendário de acompanhamento */
+.p-topo { display:flex; align-items:center; gap:12px }
+.p-topo > div:first-child { display:flex; flex-direction:column; align-items:center; min-width:76px; color:#1f8a3f; font-size:11px; font-weight:700; text-align:center }
+.p-topo b { font-size:32px; line-height:1 }
+.p-mes { flex:1; font-size:12px; line-height:2 }
+.p-mes span,.cal-legenda span { display:inline-grid; place-items:center; min-width:22px; height:22px; padding:0 4px; border-radius:6px; font-weight:1000 }
+.cal-nav { display:flex; align-items:center; justify-content:space-between }
+.cal-nav h3 { margin:0; text-transform:capitalize }
+.cal-nav button { width:36px; height:36px; border:0; border-radius:50%; background:#f4efe3; color:var(--ink); font-size:22px; font-weight:1000 }
+.cal-grade { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-top:8px }
+.cal-sem { color:#708078; font-size:11px; font-weight:700; text-align:center }
+.cal-dia { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; aspect-ratio:1; padding:0; border:0; border-radius:10px; color:var(--ink); font:inherit; font-size:14px; font-weight:1000; line-height:1.05; background:none }
+.cal-dia small { height:12px; font-size:11px }
+.d-verde { color:#fff; background:#2fa84f }
+.d-amarelo { color:#5b4300; background:#ffd23f }
+.d-cinza { color:#fff; background:#a9a293 }
+.cal-dia.hoje { box-shadow:inset 0 0 0 3px #075a6d }
+.cal-dia.d-verde.hoje,.cal-dia.d-cinza.hoje { box-shadow:inset 0 0 0 3px #075a6d,inset 0 0 0 5px #fff }
+.cal-dia.sel { outline:3px solid #dfa248; outline-offset:2px }
+.cal-dia:disabled { cursor:default }
+.cal-aviso { display:inline-block; width:10px; height:10px; border:2px solid #fff; border-radius:50%; background:#ff8a1f; vertical-align:middle }
+.cal-dia .cal-aviso { position:absolute; top:-3px; right:-3px }
+.cal-legenda { margin:10px 0 0; color:#708078; font-size:11px; line-height:2 }
+.p-est { color:#ffbf26; letter-spacing:1px; white-space:nowrap }
+.p-est span { color:#ddd1b8 }
+.p-alerta { padding:2px 6px; border-radius:6px; color:#fff; background:#ff8a1f; font-size:11px; font-weight:1000; white-space:nowrap }
+.p-svg { display:block; width:100%; height:auto; margin:2px 0 10px }
+.p-enviar { margin-top:8px; background:linear-gradient(#3fd06a,#1f9c45) }
+.p-reiniciar { margin-top:10px; background:linear-gradient(#f0a13a,#d27a17); box-shadow:0 4px 0 #9a560c }

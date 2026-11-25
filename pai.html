@@ -25,10 +25,15 @@
         <p class="p-empty" id="avisos-texto">Receba um aviso quando chegar recado do Theo ou ele terminar o dia.</p>
         <button class="next p-rec" id="ativar-avisos" type="button">🔔 Ativar avisos</button>
       </div>
-      <div class="p-card" id="resumo"><p class="p-empty">Nenhum dia concluído ainda.</p></div>
-      <div class="p-card" id="partidas" hidden><h3>Partidas</h3><table><thead><tr><th></th><th>Tempo</th><th>Erros</th></tr></thead><tbody></tbody><tfoot><tr><td>Total</td><td id="total-tempo"></td><td id="total-erros"></td></tr></tfoot></table></div>
-      <div class="p-card" id="cartao-recados"><h3>Recados</h3><div id="recados-theo"></div><p class="p-empty" id="sem-recado">Nenhum recado novo do Theo.</p><button class="next p-rec" id="gravar" type="button">● Gravar recado para o Theo</button><p class="p-note">Cada áudio é apagado 10 s depois de ouvido.</p></div>
-      <div class="p-card" id="historico" hidden></div>
+      <div class="p-card p-topo"><div><b id="seguidos">0</b><span>dias verdes seguidos</span></div><div class="p-mes" id="resumo-mes"></div></div>
+      <div class="p-card" id="calendario">
+        <div class="cal-nav"><button type="button" id="mes-antes" aria-label="Mês anterior">‹</button><h3 id="mes-nome"></h3><button type="button" id="mes-depois" aria-label="Próximo mês">›</button></div>
+        <div class="cal-grade" id="cal-grade"></div>
+        <p class="cal-legenda"><span class="d-verde">✓</span> completo <span class="d-amarelo">◐</span> incompleto <span class="d-cinza">–</span> não jogou <i class="cal-aviso"></i> mais de <b id="limite-aviso"></b> erros num jogo</p>
+      </div>
+      <div class="p-card" id="dia-detalhe" hidden></div>
+      <div class="p-card" id="grafico" hidden><h3>Evolução</h3><div id="grafico-estrelas"></div><div id="grafico-tempo"></div></div>
+      <div class="p-card" id="cartao-recados"><h3>Recados</h3><div id="recados-theo"></div><p class="p-empty" id="sem-recado">Nenhum recado novo do Theo.</p><button class="next p-rec" id="gravar" type="button">● Gravar recado para o Theo</button><button class="next p-rec p-enviar" id="enviar" type="button" hidden>➜ Enviar recado</button><p class="p-note">Cada áudio é apagado 15 s depois de ouvido.</p></div>
       <p class="p-note" id="aviso" hidden></p>
     </div>
   </section>
@@ -42,7 +47,6 @@
     'use strict';
     const L = window.Logica, N = window.Nuvem, $ = s => document.querySelector(s);
     const tempo = ms => { const s = Math.round(ms / 1000); return `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, '0')} s`; };
-    const dataBR = iso => iso.split('-').reverse().slice(0, 2).join('/');
     const avisar = t => { $('#aviso').textContent = t; $('#aviso').hidden = false; };
 
     // Simulador (?simulador): sem servidor; lê os dados e recados deste navegador.
@@ -85,39 +89,111 @@
       } else N.ativarAvisos(false).catch(() => {}); // já permitido: renova a inscrição em silêncio
     }
 
-    // Monta, a partir do servidor, o mesmo formato que o app guarda no aparelho.
+    // Formato comum: jogos [{etapa, partida, fim, duracaoMs, erros}] e dias concluídos [{etapa, fim, estrelas}].
     async function carregar() {
       const [partidas, dias] = await Promise.all([N.lerPartidas(), N.lerDias()]);
-      const porDia = {};
-      partidas.forEach(p => (porDia[p.etapa] ||= []).push({ partida: p.ordem, duracaoMs: p.tempo_ms, erros: p.erros }));
-      const concluidos = dias.map(d => ({ dia: d.etapa, data: L.dataLocal(new Date(d.concluido_em)), partidas: porDia[d.etapa] || [], estrelas: { ...L.estrelas(porDia[d.etapa] || []), total: d.estrelas } }));
-      const aberto = Object.keys(porDia).map(Number).find(e => !dias.some(d => d.etapa === e));
-      return { concluidos, pacote: aberto ? { dia: aberto, partidas: porDia[aberto] } : null };
+      return {
+        jogos: partidas.map(p => ({ etapa: p.etapa, partida: p.ordem, fim: p.criada_em, duracaoMs: p.tempo_ms, erros: p.erros })),
+        dias: dias.map(d => ({ etapa: d.etapa, fim: d.concluido_em, estrelas: d.estrelas })),
+      };
+    }
+    function local() {
+      let e; try { e = JSON.parse(localStorage.getItem('sudoku-cores-theo-v2')) || L.estadoInicial(); } catch { e = L.estadoInicial(); }
+      const lote = [...e.concluidos, ...(e.pacote ? [e.pacote] : [])];
+      return {
+        jogos: lote.flatMap(d => d.partidas.map(p => ({ etapa: d.dia, partida: p.partida, fim: p.fim, duracaoMs: p.duracaoMs, erros: p.erros }))),
+        dias: e.concluidos.map(d => ({ etapa: d.dia, fim: d.partidas[d.partidas.length - 1].fim, estrelas: d.estrelas.total })),
+      };
     }
 
-    function desenhar(estado) {
-      const dia = estado.concluidos[estado.concluidos.length - 1];
-      $('#resumo').innerHTML = '<p class="p-empty">Nenhum dia concluído ainda.</p>';
-      if (dia) {
-        const e = dia.estrelas;
-        $('#titulo').textContent = `Theo · Dia ${dia.dia}`;
-        $('#data').textContent = dataBR(dia.data);
-        $('#resumo').innerHTML = `<div class="p-stars">${'★'.repeat(e.total)}<span>${'★'.repeat(3 - e.total)}</span></div>
-          <ul class="p-rules"><li class="ok">Concluir · ${dia.partidas.length} de ${L.JOGOS_POR_DIA} jogos</li>
-          <li class="${e.atencao ? 'ok' : 'no'}">Atenção · ${e.erros} erros (até ${L.LIMITE_ERROS})</li>
-          <li class="${e.rapidez ? 'ok' : 'no'}">Rapidez · média ${tempo(e.mediaMs)} (até ${L.LIMITE_MEDIA_MS / 60000} min)</li></ul>`;
-        $('#partidas tbody').innerHTML = dia.partidas.map(p => `<tr><td>Jogo ${p.partida}</td><td>${tempo(p.duracaoMs)}</td><td>${p.erros}</td></tr>`).join('');
-        $('#total-tempo').textContent = tempo(dia.partidas.reduce((s, p) => s + p.duracaoMs, 0));
-        $('#total-erros').textContent = e.erros;
-        $('#partidas').hidden = false;
+    const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+    const ICONE = { verde: '✓', amarelo: '◐', cinza: '–', vazio: '' };
+    const hora = iso => new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const estrelinhas = n => `<b class="p-est">${'★'.repeat(n)}<span>${'★'.repeat(3 - n)}</span></b>`;
+    const hoje = L.dataLocal();
+    let dados = { jogos: [], dias: [] }, mapa = {}, mes = new Date(hoje + 'T12:00:00'), escolhido = null;
+    mes.setDate(1);
+    $('#limite-aviso').textContent = L.AVISO_ERROS_JOGO;
+
+    function desenhar() {
+      mapa = L.mapaDias(dados.jogos, dados.dias);
+      const n = L.sequenciaVerde(mapa, hoje);
+      $('#seguidos').textContent = n;
+      $('#data').textContent = hoje.split('-').reverse().join('/');
+      // Calendário do mês: semanas começando no domingo.
+      const ano = mes.getFullYear(), m = mes.getMonth(), total = new Date(ano, m + 1, 0).getDate();
+      $('#mes-nome').textContent = `${MESES[m]} ${ano}`;
+      const conta = { verde: 0, amarelo: 0, cinza: 0, vazio: 0 };
+      const celulas = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(d => `<span class="cal-sem">${d}</span>`);
+      for (let i = 0; i < new Date(ano, m, 1).getDay(); i++) celulas.push('<span></span>');
+      for (let d = 1; d <= total; d++) {
+        const data = L.dataLocal(new Date(ano, m, d)), estado = L.estadoDoDia(mapa, data, hoje), info = mapa[data];
+        conta[estado]++;
+        celulas.push(`<button type="button" class="cal-dia d-${estado}${data === hoje ? ' hoje' : ''}${data === escolhido ? ' sel' : ''}" data-data="${data}" ${info ? '' : 'disabled'} aria-label="${d}: ${estado}">${d}<small>${ICONE[estado]}</small>${info && info.aviso ? '<i class="cal-aviso"></i>' : ''}</button>`);
       }
-      if (estado.pacote && estado.pacote.partidas.length) {
-        $('#resumo').insertAdjacentHTML('beforeend', `<p class="p-empty">Hoje: ${estado.pacote.partidas.length} de ${L.JOGOS_POR_DIA} jogos feitos.</p>`);
-      }
-      const antigos = estado.concluidos.slice(0, -1).reverse();
-      $('#historico').innerHTML = '<h3>Dias anteriores</h3>' + antigos.map(d => `<div class="p-day"><span>Dia ${d.dia} · ${dataBR(d.data)} · ${d.estrelas.erros} erros · média ${tempo(d.estrelas.mediaMs)}</span><b>${'★'.repeat(d.estrelas.total)}</b></div>`).join('');
-      $('#historico').hidden = !antigos.length;
+      $('#cal-grade').innerHTML = celulas.join('');
+      $('#resumo-mes').innerHTML = `<span class="d-verde">${conta.verde}</span> verdes <span class="d-amarelo">${conta.amarelo}</span> amarelos <span class="d-cinza">${conta.cinza}</span> cinzas`;
+      detalhe();
+      grafico();
     }
+
+    // Aba estendida do dia tocado: horário, tempo, erros e nota (estrelas) de cada jogo.
+    function detalhe() {
+      const caixa = $('#dia-detalhe'), info = escolhido && mapa[escolhido];
+      caixa.hidden = !info;
+      if (!info) return;
+      const jogos = info.jogos.slice().sort((a, b) => a.fim.localeCompare(b.fim));
+      const [a, m, d] = escolhido.split('-');
+      caixa.innerHTML = `<h3>${d}/${m}/${a} · ${info.estado === 'verde' ? 'dia completo ' + estrelinhas(info.estrelas) : `incompleto · ${jogos.length} de ${L.JOGOS_POR_DIA} jogos`}</h3>
+        <table><thead><tr><th>Jogo</th><th>Hora</th><th>Tempo</th><th>Erros</th><th>Nota</th></tr></thead><tbody>${jogos.map(j => `<tr>
+          <td>${j.partida}</td><td>${hora(j.fim)}</td><td>${tempo(j.duracaoMs)}</td>
+          <td>${j.erros > L.AVISO_ERROS_JOGO ? `<span class="p-alerta">aviso: ${j.erros} erros</span>` : j.erros}</td><td>${estrelinhas(L.estrelasJogo(j))}</td></tr>`).join('')}</tbody>
+        <tfoot><tr><td>Total</td><td></td><td>${tempo(jogos.reduce((s, j) => s + j.duracaoMs, 0))}</td><td>${jogos.reduce((s, j) => s + j.erros, 0)}</td><td></td></tr></tfoot></table>
+        <button class="next p-rec p-reiniciar" id="reiniciar" type="button">↺ Reiniciar o Dia ${Math.min(...jogos.map(j => j.etapa))}</button>`;
+      $('#reiniciar').onclick = () => reiniciar(Math.min(...jogos.map(j => j.etapa)));
+    }
+
+    // Reiniciar: apaga o dia escolhido e os seguintes; o Theo joga esse dia de novo, já hoje.
+    async function reiniciar(etapa) {
+      const depois = [...new Set(dados.jogos.map(j => j.etapa))].filter(e => e > etapa).length;
+      if (!confirm(`Reiniciar o Dia ${etapa}?\n\nApaga os jogos, tempos e estrelas desse dia${depois === 1 ? ' e do dia seguinte' : depois ? ` e dos ${depois} dias seguintes` : ''}. O Theo joga o Dia ${etapa} de novo, já hoje.`)) return;
+      try {
+        if (simulador) localStorage.setItem('sudoku-cores-theo-v2', JSON.stringify(L.reiniciar(JSON.parse(localStorage.getItem('sudoku-cores-theo-v2')) || L.estadoInicial(), etapa)));
+        else await N.reiniciarDia(etapa);
+        escolhido = null;
+        await atualizar();
+        avisar(`Dia ${etapa} reiniciado. ${simulador ? '' : 'O celular do Theo atualiza quando o app abrir.'}`);
+      } catch { avisar('Não consegui reiniciar. Tente de novo.'); }
+    }
+
+    // Evolução por dia de jogo (últimos 14): estrelas do dia e tempo de cada jogo com a média do dia.
+    function grafico() {
+      const etapas = [...new Set(dados.jogos.map(j => j.etapa))].sort((a, b) => a - b).slice(-14);
+      $('#grafico').hidden = !etapas.length;
+      if (!etapas.length) return;
+      const W = 300, H = 80, w = W / etapas.length, x = i => i * w + w / 2;
+      const rotulos = etapas.map((e, i) => `<text x="${x(i)}" y="${H + 13}" text-anchor="middle" font-size="9" fill="#708078">D${e}</text>`).join('');
+      const est = etapas.map(e => (dados.dias.find(d => d.etapa === e) || {}).estrelas || 0);
+      $('#grafico-estrelas').innerHTML = `<p class="p-empty">Estrelas por dia</p><svg viewBox="0 0 ${W} ${H + 16}" class="p-svg">${est.map((v, i) => `<rect x="${x(i) - w * .3}" y="${H - v / 3 * H}" width="${w * .6}" height="${v / 3 * H}" rx="3" fill="#ffbf26"><title>${v} estrelas</title></rect>`).join('')}${rotulos}</svg>`;
+      const porEtapa = etapas.map(e => dados.jogos.filter(j => j.etapa === e).map(j => j.duracaoMs / 60000));
+      const max = Math.max(L.LIMITE_MEDIA_MS / 60000, ...porEtapa.flat()) * 1.1, y = v => H - v / max * H;
+      const media = porEtapa.map(t => t.reduce((s, v) => s + v, 0) / t.length);
+      $('#grafico-tempo').innerHTML = `<p class="p-empty">Tempo por jogo (min) · linha = média do dia · tracejado = meta de ${L.LIMITE_MEDIA_MS / 60000} min</p><svg viewBox="0 0 ${W} ${H + 16}" class="p-svg">
+        <line x1="0" x2="${W}" y1="${y(L.LIMITE_MEDIA_MS / 60000)}" y2="${y(L.LIMITE_MEDIA_MS / 60000)}" stroke="#1f8a3f" stroke-dasharray="4 4"/>
+        ${porEtapa.map((t, i) => t.map(v => `<circle cx="${x(i)}" cy="${y(v)}" r="2.5" fill="#4b8197" opacity=".45"/>`).join('')).join('')}
+        <polyline points="${media.map((v, i) => `${x(i)},${y(v)}`).join(' ')}" fill="none" stroke="#075a6d" stroke-width="2.5"/>
+        ${media.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="3.5" fill="#075a6d"><title>média ${tempo(v * 60000)}</title></circle>`).join('')}${rotulos}</svg>`;
+    }
+
+    $('#cal-grade').addEventListener('click', e => {
+      const b = e.target.closest('.cal-dia');
+      if (!b || b.disabled) return;
+      escolhido = escolhido === b.dataset.data ? null : b.dataset.data;
+      desenhar();
+      if (escolhido) $('#dia-detalhe').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+    $('#mes-antes').addEventListener('click', () => { mes.setMonth(mes.getMonth() - 1); desenhar(); });
+    $('#mes-depois').addEventListener('click', () => { mes.setMonth(mes.getMonth() + 1); desenhar(); });
 
     async function listarRecados() {
       const lista = $('#recados-theo');
@@ -132,23 +208,31 @@
         const barra = linha.querySelector('.wave i'), conta = linha.querySelector('.count');
         linha.querySelector('.play-btn').onclick = () => window.Recados.tocar(r, {
           aoProgresso: p => { barra.style.width = p * 100 + '%'; },
-          aoContar: s => { conta.textContent = s; conta.style.setProperty('--p', (10 - s) * 10 + '%'); },
+          aoContar: s => { conta.textContent = s; conta.style.setProperty('--p', (1 - s * 1000 / window.Recados.APAGAR_APOS_OUVIR_MS) * 100 + '%'); },
           aoApagar: listarRecados
         });
         lista.append(linha);
       });
     }
-    let parar = null;
+    // Gravar e enviar são botões separados.
+    let parar = null, gravado = null;
     $('#gravar').hidden = !window.Recados.podeGravar();
     $('#gravar').addEventListener('click', async e => {
       const b = e.currentTarget;
-      if (parar) { try { await parar(); b.textContent = '✓ Recado enviado para o Theo'; } catch { b.textContent = 'Não enviou. Toque para gravar de novo.'; } parar = null; return; }
-      try { parar = await window.Recados.gravar('pai'); b.textContent = '■ Parar e enviar'; }
+      if (parar) { gravado = await parar(); parar = null; b.textContent = '● Gravar de novo'; $('#enviar').hidden = false; return; }
+      try { gravado = null; $('#enviar').hidden = true; parar = await window.Recados.gravar('pai'); b.textContent = '■ Parar gravação'; }
       catch { b.textContent = 'Microfone indisponível'; }
     });
+    $('#enviar').addEventListener('click', async e => {
+      const b = e.currentTarget;
+      if (!gravado) return;
+      b.disabled = true;
+      try { await gravado.enviar(); gravado = null; b.hidden = true; $('#gravar').textContent = '✓ Enviado · ● Gravar outro'; }
+      catch { b.textContent = 'Não enviou. Tocar de novo'; }
+      b.disabled = false;
+    });
 
-    const local = () => { try { return JSON.parse(localStorage.getItem('sudoku-cores-theo-v2')) || L.estadoInicial(); } catch { return L.estadoInicial(); } };
-    const atualizar = async () => { try { desenhar(simulador ? local() : await carregar()); } catch { avisar('Não consegui carregar os dados.'); } };
+    const atualizar = async () => { try { dados = simulador ? local() : await carregar(); escolhido ||= dados.jogos.map(j => L.dataDe(j.fim)).sort().pop() || null; desenhar(); } catch { avisar('Não consegui carregar os dados.'); } };
     // Recado apagado depois de ouvido também gera aviso; listar de novo é barato.
     if (!simulador) N.ouvir(() => { atualizar(); listarRecados(); });
     atualizar();

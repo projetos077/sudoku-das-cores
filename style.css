@@ -29,7 +29,7 @@ body { margin:0; min-height:100vh; color:#fff8e8; background:radial-gradient(ell
 .game-screen .cell { background:#fffdf8 }
 .game-screen .dot { width:66%; border-width:2px }
 .game-screen .cell.selected { background:#fff0ad }
-.game-screen .cell.unit-complete { animation:unitPop .58s cubic-bezier(.2,.8,.25,1.25) both }
+.game-screen .cell.desc { animation:unitPop .58s cubic-bezier(.2,.8,.25,1.25) both }
 @keyframes unitPop { 35%{transform:scale(1.08);background:#fff0a1;box-shadow:inset 0 0 0 3px #f5c139} 100%{transform:scale(1)} }
 .game-screen .palette { gap:9px; margin:15px 0 11px }
 .game-screen .palette button { width:49px; height:49px; box-shadow:0 4px 0 #8c5730 }
@@ -81,7 +81,7 @@ body { margin:0; min-height:100vh; color:#fff8e8; background:radial-gradient(ell
 .palette button[aria-pressed="true"] { transform:translateY(-4px); box-shadow:0 0 0 3px #ffbf26,0 6px 0 #8c5730 }
 .cell.new .piece { animation:drop .45s cubic-bezier(.3,1.6,.5,1) both }
 @keyframes drop { 0%{transform:translateY(-40px) scale(.6);opacity:0} 100%{transform:none;opacity:1} }
-.cell.unit-complete .piece { animation:hop .5s ease-out 2 }
+
 @keyframes hop { 40%{ transform:translateY(-9px) scale(1.12) rotate(-6deg) } }
 /* 3 · tesouro */
 .chest { display:none; position:absolute; z-index:5; top:92px; right:14px; width:58px; height:48px }
@@ -225,7 +225,7 @@ body { overflow:hidden; -webkit-tap-highlight-color:transparent; user-select:non
 .vivo { position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none }
 .vivo::before { content:""; position:absolute; right:-45%; top:-45%; width:115%; aspect-ratio:1; border-radius:50%; background:repeating-conic-gradient(#fff6b055 0 6deg,transparent 6deg 18deg); -webkit-mask:radial-gradient(circle,#000 5%,transparent 60%); mask:radial-gradient(circle,#000 5%,transparent 60%); animation:spin 40s linear infinite }
 #tela-partida .screen-body { position:relative; z-index:1 }
-#tela-partida .board:not(.complete) .cell:not(.new):not(.unit-complete) .piece { animation:boia 3s ease-in-out calc(var(--i) * -190ms) infinite }
+#tela-partida .board:not(.complete) .cell:not(.new):not(.desc) .piece { animation:boia 3s ease-in-out calc(var(--i) * -190ms) infinite }
 @keyframes boia { 50% { transform:translateY(-2px) scale(1.03) } }
 @media (prefers-reduced-motion:reduce) { .vivo,#tela-partida .placa-estilo,#tela-partida .theo-topo .step,#tela-partida .piece { animation:none!important } }
 
@@ -253,3 +253,91 @@ body { overflow:hidden; -webkit-tap-highlight-color:transparent; user-select:non
 /* Bola proporcional à tela */
 .bola.rola { font-size:clamp(38px,12vw,64px); bottom:1.5% }
 .bola.chute { font-size:clamp(52px,16vw,86px) }
+
+/* Alterações de 25/11/2026 (lista do pai) */
+/* Peça escolhida: anel amarelo e sobe; peça completa: cinza e sem toque */
+#tela-partida .palette button { transition:transform .15s, box-shadow .15s, filter .2s, opacity .2s }
+#tela-partida .palette button[aria-pressed="true"] { transform:translateY(-7px) scale(1.14); background:#fff6b8; box-shadow:0 0 0 4px #ffbf26,0 0 0 7px #fff,0 9px 0 #8c5730 }
+#tela-partida .palette button:disabled { filter:grayscale(1); opacity:.4; transform:scale(.88); box-shadow:0 2px 0 #8c5730; cursor:default }
+/* Item descoberto: cada cor tem a sua animação */
+.cell.desc-0 .piece { animation:descGiro .8s ease-in-out 2 }
+.cell.desc-1 .piece { animation:descPulo .45s ease-out 4 alternate }
+.cell.desc-2 .piece { animation:descBalanco .4s ease-in-out 4 }
+.cell.desc-3 .piece { animation:descCresce .5s ease-in-out 3 }
+@keyframes descGiro { to { transform:rotate(360deg) } }
+@keyframes descPulo { to { transform:translateY(-14px) scale(1.1) } }
+@keyframes descBalanco { 25% { transform:rotate(-16deg) scale(1.08) } 75% { transform:rotate(16deg) scale(1.08) } }
+@keyframes descCresce { 50% { transform:scale(1.35); filter:drop-shadow(0 0 8px #fff) } }
+.item-pop { position:absolute; z-index:6; color:#ffbf26; font-size:24px; font-weight:1000; text-shadow:0 1px #7d3827; pointer-events:none; animation:note 1s ease-out forwards }
+/* Jogo concluído: check verde com o ícone do tema */
+#tela-partida .play-paper { position:relative }
+.feito { position:absolute; z-index:9; display:grid; place-items:center; pointer-events:none; visibility:hidden }
+.feito.on { visibility:visible }
+.feito-ok { display:grid; place-items:center; width:100%; height:100%; border:6px solid #fff; border-radius:16px; color:#fff; font-size:min(55vw,240px); font-weight:1000; line-height:1; text-shadow:0 6px 0 #1d7a35; background:#2fb24fee; box-shadow:0 0 0 4px #1d7a35,0 0 40px #fff }
+.feito.on .feito-ok { animation:feitoPop .55s cubic-bezier(.2,1.5,.4,1) both }
+.feito-tema { position:absolute; top:6%; right:6%; font-size:min(16vw,64px) }
+.feito.on .feito-tema { animation:feitoTema .8s .25s cubic-bezier(.2,1.6,.4,1) both }
+@keyframes feitoPop { 0% { transform:scale(.2); opacity:0 } 100% { transform:none; opacity:1 } }
+@keyframes feitoTema { 0% { transform:scale(0) rotate(-40deg) } 100% { transform:rotate(12deg) } }
+/* Recados: dois quadros (do papai / meu) e o meu recado em 3 etapas: gravar → enviar → papai ouviu */
+.voice-paper { gap:12px }
+.rc-bloco { display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding:10px; border:2px solid #dec9a3; border-radius:16px; background:#fffdf6 }
+.rc-titulo { display:flex; align-items:center; gap:8px; align-self:flex-start; margin:0; color:#723b26; font-size:16px; font-weight:1000 }
+.rc-titulo .avatar { width:30px; height:30px; font-size:15px }
+.rc-bloco .msg { border:0; padding:0; background:none }
+.rc-aviso { margin:0; color:#8a7458; font-size:15px; font-weight:1000 }
+.rc-ok { color:#1f8a3f; animation:feitoPop .5s cubic-bezier(.2,1.5,.4,1) both }
+.rc-passos { display:flex; width:100%; margin:0; padding:0; list-style:none; counter-reset:p }
+.rc-passos li { position:relative; flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; color:#9b8a70; font-size:12px; font-weight:1000; opacity:.5; transition:opacity .3s }
+.rc-passos li + li::before { content:""; position:absolute; top:22px; right:calc(50% + 26px); width:calc(100% - 52px); border-top:3px dashed #d9c6a2 }
+.rc-passos i { position:relative; display:grid; place-items:center; width:46px; height:46px; border:3px solid #fff; border-radius:50%; font-size:22px; font-style:normal; background:#eadcbf; box-shadow:0 3px 0 #c9b48e }
+.rc-passos li::after { content:""; position:absolute; top:-4px; left:calc(50% + 12px); display:none; place-items:center; width:20px; height:20px; border:2px solid #fff; border-radius:50%; color:#fff; font-size:12px; background:#1f9c45 }
+/* etapa feita: verde com ✓ */
+#gravacao:is([data-estado=gravado],[data-estado=enviando],[data-estado=erro],[data-estado=enviado],[data-estado=ouvido]) [data-p="1"],
+#gravacao:is([data-estado=enviado],[data-estado=ouvido]) [data-p="2"],
+#gravacao[data-estado=ouvido] [data-p="3"] { color:#1f8a3f; opacity:1 }
+#gravacao:is([data-estado=gravado],[data-estado=enviando],[data-estado=erro],[data-estado=enviado],[data-estado=ouvido]) [data-p="1"] i,
+#gravacao:is([data-estado=enviado],[data-estado=ouvido]) [data-p="2"] i,
+#gravacao[data-estado=ouvido] [data-p="3"] i { background:#bff0c9; box-shadow:0 3px 0 #1f9c45 }
+#gravacao:is([data-estado=gravado],[data-estado=enviando],[data-estado=erro],[data-estado=enviado],[data-estado=ouvido]) [data-p="1"]::after,
+#gravacao:is([data-estado=enviado],[data-estado=ouvido]) [data-p="2"]::after,
+#gravacao[data-estado=ouvido] [data-p="3"]::after { content:"✓"; display:grid }
+/* etapa da vez: amarela, pulsando */
+#gravacao:is([data-estado=inicio],[data-estado=gravando]) [data-p="1"],
+#gravacao:is([data-estado=gravado],[data-estado=enviando],[data-estado=erro]) [data-p="2"],
+#gravacao[data-estado=enviado] [data-p="3"] { color:#7d3827; opacity:1 }
+#gravacao:is([data-estado=inicio],[data-estado=gravando]) [data-p="1"] i,
+#gravacao:is([data-estado=gravado],[data-estado=enviando],[data-estado=erro]) [data-p="2"] i,
+#gravacao[data-estado=enviado] [data-p="3"] i { background:#fff3b0; box-shadow:0 0 0 3px #ffbf26,0 3px 0 #c98f12; animation:rcVez 1.2s ease-in-out infinite }
+#gravacao[data-estado=gravando] [data-p="1"] i { background:#ff6941; box-shadow:0 0 0 3px #e93424 }
+#gravacao[data-estado=enviado] [data-p="3"] i { animation:rcEscuta 1.4s ease-in-out infinite }
+#gravacao[data-estado=ouvido] [data-p="3"] i { animation:rcOuviu .5s cubic-bezier(.2,1.6,.4,1) 3 alternate }
+@keyframes rcVez { 50% { transform:scale(1.12) } }
+@keyframes rcEscuta { 25% { transform:rotate(-14deg) } 75% { transform:rotate(14deg) } }
+@keyframes rcOuviu { to { transform:translateY(-8px) scale(1.2) } }
+/* botões: só os da etapa da vez aparecem */
+.rc-acao { display:flex; align-items:center; justify-content:center; gap:18px; min-height:100px }
+.rc-acao .mic { margin:0 }
+.mic .ico-parar,#gravacao[data-estado=gravando] .mic .ico-mic { display:none }
+#gravacao[data-estado=gravando] .mic .ico-parar { display:block }
+#gravacao[data-estado=gravando] #microfone { animation:pulseMic 1s ease-in-out infinite }
+.mic.enviar { padding:26px 24px 22px 28px; background:linear-gradient(#3fd06a,#1f9c45); box-shadow:0 5px 0 #17703a; animation:pulseEnviar 1s ease-in-out infinite }
+@keyframes pulseEnviar { 50% { box-shadow:0 5px 0 #17703a,0 0 0 14px #3fd06a55 } }
+.rc-mini { display:grid; place-items:center; width:52px; height:52px; padding:0; border:3px solid #fff; border-radius:50%; color:#fff; font-size:22px; background:linear-gradient(#5aa3c4,#2f7593); box-shadow:0 3px 0 #1d5670; cursor:pointer }
+#enviar,#ouvir-meu { display:none }
+#gravacao:is([data-estado=gravado],[data-estado=enviando],[data-estado=erro]) #enviar,
+#gravacao:is([data-estado=gravado],[data-estado=erro]) #ouvir-meu { display:grid }
+#gravacao:is([data-estado=gravado],[data-estado=erro]) #microfone { order:-1; width:56px; height:56px; padding:12px; border-width:3px } /* gravar de novo, pequeno */
+#gravacao[data-estado=enviando] #microfone { display:none }
+#gravacao[data-estado=enviando] #enviar { opacity:.6; animation:rcVez .6s ease-in-out infinite }
+/* ondas e relógio enquanto grava */
+.rc-ondas { display:none; align-items:center; gap:4px; height:30px }
+#gravacao[data-estado=gravando] .rc-ondas { display:flex }
+.rc-ondas i { width:6px; height:100%; border-radius:3px; background:#e93424; animation:rcOnda .7s ease-in-out infinite alternate }
+.rc-ondas i:nth-child(2n) { animation-delay:-.35s } .rc-ondas i:nth-child(3n) { animation-delay:-.2s; animation-duration:.5s }
+.rc-ondas b { margin-left:8px; color:#e93424; font-size:18px; font-variant-numeric:tabular-nums }
+@keyframes rcOnda { from { transform:scaleY(.25) } }
+#gravacao[data-estado=ouvido] .mic-label { color:#1f8a3f; font-size:18px }
+#gravacao[data-estado=erro] .mic-label { color:#d13c2f }
+@media (prefers-reduced-motion:reduce) { .rc-passos i,.rc-ondas i,.mic.enviar,#microfone,.rc-ok { animation:none!important } }
+@media (prefers-reduced-motion:reduce) { .cell[class*="desc-"] .piece,.feito.on * { animation:none!important } }

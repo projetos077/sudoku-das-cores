@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b6274">
   <title>Sudoku das Cores — Theo</title>
-  <link rel="stylesheet" href="style.css?v=13">
+  <link rel="stylesheet" href="style.css?v=16">
   <link rel="manifest" href="manifest-theo.json">
   <link rel="apple-touch-icon" href="icone-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,7 +20,7 @@
   <section class="phone game-screen play-screen" id="tela-partida" data-set="frutas" aria-label="Partida">
     <div class="vivo" aria-hidden="true"><i class="bola rola">⚽</i><i class="bola chute" id="bola-chute">⚽</i></div>
     <div class="mini-top"><span class="brand-dots" aria-hidden="true"><i style="--c:var(--blue)"></i><i style="--c:var(--yellow)"></i><i style="--c:var(--green)"></i><i style="--c:var(--purple)"></i></span><button class="settings" type="button" data-som aria-label="Desligar sons">⚙</button></div><div class="chest" aria-hidden="true"><span class="chest-lid"></span><span class="chest-box"></span><span class="chest-coins"></span></div>
-    <div class="screen-body"><div class="theo-topo"><img id="theo" src="ilustracoes/mascote-theo.png" alt="" aria-hidden="true"><span class="step" id="etapa">1/6</span></div><h2 class="wood-title placa-estilo" id="placa"><span class="selo" id="selo" aria-hidden="true"></span><span id="nome-estilo">Desafio do dia</span></h2><div class="paper play-paper"><h1 class="sudoku-titulo" aria-label="Sudoku"><span style="--c:var(--blue)">S</span><span style="--c:var(--yellow)">U</span><span style="--c:var(--green)">D</span><span style="--c:var(--purple)">O</span><span style="--c:var(--blue)">K</span><span style="--c:var(--yellow)">U</span></h1><div class="board" id="tabuleiro" role="grid" aria-label="Tabuleiro"></div><div class="palette" id="paleta"><button type="button" data-c="0" aria-label="Azul"></button><button type="button" data-c="1" aria-label="Amarelo"></button><button type="button" data-c="2" aria-label="Verde"></button><button type="button" data-c="3" aria-label="Roxo"></button><button type="button" class="eraser" id="borracha" aria-label="Borracha"><svg viewBox="0 0 48 48" aria-hidden="true"><g transform="rotate(-32 24 24)"><rect x="10" y="9" width="28" height="30" rx="5" fill="#F47791" stroke="#793F52" stroke-width="3"/><path d="M11 20h26" stroke="#FFF4DE" stroke-width="7"/><path d="M12 13h20" stroke="#FFB1C2" stroke-width="2" stroke-linecap="round"/><path d="M13 35h18" stroke="#D64F74" stroke-width="2" stroke-linecap="round"/></g></svg></button></div></div></div>
+    <div class="screen-body"><div class="theo-topo"><img id="theo" src="ilustracoes/mascote-theo.png" alt="" aria-hidden="true"><span class="step" id="etapa">1/6</span></div><h2 class="wood-title placa-estilo" id="placa"><span class="selo" id="selo" aria-hidden="true"></span><span id="nome-estilo">Desafio do dia</span></h2><div class="paper play-paper"><h1 class="sudoku-titulo" aria-label="Sudoku"><span style="--c:var(--blue)">S</span><span style="--c:var(--yellow)">U</span><span style="--c:var(--green)">D</span><span style="--c:var(--purple)">O</span><span style="--c:var(--blue)">K</span><span style="--c:var(--yellow)">U</span></h1><div class="board" id="tabuleiro" role="grid" aria-label="Tabuleiro"></div><div class="feito" id="feito" aria-hidden="true"><span class="feito-ok">✓</span><span class="feito-tema"></span></div><div class="palette" id="paleta"><button type="button" data-c="0" aria-label="Azul"></button><button type="button" data-c="1" aria-label="Amarelo"></button><button type="button" data-c="2" aria-label="Verde"></button><button type="button" data-c="3" aria-label="Roxo"></button><button type="button" class="eraser" id="borracha" aria-label="Borracha"><svg viewBox="0 0 48 48" aria-hidden="true"><g transform="rotate(-32 24 24)"><rect x="10" y="9" width="28" height="30" rx="5" fill="#F47791" stroke="#793F52" stroke-width="3"/><path d="M11 20h26" stroke="#FFF4DE" stroke-width="7"/><path d="M12 13h20" stroke="#FFB1C2" stroke-width="2" stroke-linecap="round"/><path d="M13 35h18" stroke="#D64F74" stroke-width="2" stroke-linecap="round"/></g></svg></button></div></div></div>
     <template data-set="frutas" data-k="0"><img class="piece" src="ilustracoes/pecas/frutas-0.png" alt=""></template><template data-set="frutas" data-k="1"><img class="piece" src="ilustracoes/pecas/frutas-1.png" alt=""></template><template data-set="frutas" data-k="2"><img class="piece" src="ilustracoes/pecas/frutas-2.png" alt=""></template><template data-set="frutas" data-k="3"><img class="piece" src="ilustracoes/pecas/frutas-3.png" alt=""></template><template data-set="bichos" data-k="0"><img class="piece" src="ilustracoes/pecas/bichos-0.png" alt=""></template><template data-set="bichos" data-k="1"><img class="piece" src="ilustracoes/pecas/bichos-1.png" alt=""></template><template data-set="bichos" data-k="2"><img class="piece" src="ilustracoes/pecas/bichos-2.png" alt=""></template><template data-set="bichos" data-k="3"><img class="piece" src="ilustracoes/pecas/bichos-3.png" alt=""></template><template data-set="tesouros" data-k="0"><img class="piece" src="ilustracoes/pecas/tesouros-0.png" alt=""></template><template data-set="tesouros" data-k="1"><img class="piece" src="ilustracoes/pecas/tesouros-1.png" alt=""></template><template data-set="tesouros" data-k="2"><img class="piece" src="ilustracoes/pecas/tesouros-2.png" alt=""></template><template data-set="tesouros" data-k="3"><img class="piece" src="ilustracoes/pecas/tesouros-3.png" alt=""></template><template data-set="dinos" data-k="0"><img class="piece" src="ilustracoes/pecas/dinos-0.png" alt=""></template><template data-set="dinos" data-k="1"><img class="piece" src="ilustracoes/pecas/dinos-1.png" alt=""></template><template data-set="dinos" data-k="2"><img class="piece" src="ilustracoes/pecas/dinos-2.png" alt=""></template><template data-set="dinos" data-k="3"><img class="piece" src="ilustracoes/pecas/dinos-3.png" alt=""></template><template data-set="carinhas" data-k="0"><svg class="piece face" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="var(--blue)" stroke="#173b54" stroke-width="2.5"/><circle cx="14" cy="17" r="2.6" fill="#173b54"/><circle cx="26" cy="17" r="2.6" fill="#173b54"/><circle cx="15" cy="16" r=".9" fill="#fff"/><circle cx="27" cy="16" r=".9" fill="#fff"/><path d="M13 24q7 7 14 0" fill="none" stroke="#173b54" stroke-width="2.4" stroke-linecap="round"/><circle cx="10.5" cy="23" r="2.4" fill="#ff8aa0" opacity=".6"/><circle cx="29.5" cy="23" r="2.4" fill="#ff8aa0" opacity=".6"/></svg></template><template data-set="carinhas" data-k="1"><svg class="piece face" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="var(--yellow)" stroke="#173b54" stroke-width="2.5"/><circle cx="14" cy="17" r="2.6" fill="#173b54"/><circle cx="26" cy="17" r="2.6" fill="#173b54"/><circle cx="15" cy="16" r=".9" fill="#fff"/><circle cx="27" cy="16" r=".9" fill="#fff"/><path d="M13 24q7 7 14 0" fill="none" stroke="#173b54" stroke-width="2.4" stroke-linecap="round"/><circle cx="10.5" cy="23" r="2.4" fill="#ff8aa0" opacity=".6"/><circle cx="29.5" cy="23" r="2.4" fill="#ff8aa0" opacity=".6"/></svg></template><template data-set="carinhas" data-k="2"><svg class="piece face" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="var(--green)" stroke="#173b54" stroke-width="2.5"/><circle cx="14" cy="17" r="2.6" fill="#173b54"/><circle cx="26" cy="17" r="2.6" fill="#173b54"/><circle cx="15" cy="16" r=".9" fill="#fff"/><circle cx="27" cy="16" r=".9" fill="#fff"/><path d="M13 24q7 7 14 0" fill="none" stroke="#173b54" stroke-width="2.4" stroke-linecap="round"/><circle cx="10.5" cy="23" r="2.4" fill="#ff8aa0" opacity=".6"/><circle cx="29.5" cy="23" r="2.4" fill="#ff8aa0" opacity=".6"/></svg></template><template data-set="carinhas" data-k="3"><svg class="piece face" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="var(--purple)" stroke="#173b54" stroke-width="2.5"/><circle cx="14" cy="17" r="2.6" fill="#173b54"/><circle cx="26" cy="17" r="2.6" fill="#173b54"/><circle cx="15" cy="16" r=".9" fill="#fff"/><circle cx="27" cy="16" r=".9" fill="#fff"/><path d="M13 24q7 7 14 0" fill="none" stroke="#173b54" stroke-width="2.4" stroke-linecap="round"/><circle cx="10.5" cy="23" r="2.4" fill="#ff8aa0" opacity=".6"/><circle cx="29.5" cy="23" r="2.4" fill="#ff8aa0" opacity=".6"/></svg></template>
   </section>
 
@@ -37,10 +37,27 @@
   <section class="phone voice-screen" id="tela-recado" aria-label="Recados">
     <div class="mini-top"><span class="brand-dots" aria-hidden="true"><i style="--c:var(--blue)"></i><i style="--c:var(--yellow)"></i><i style="--c:var(--green)"></i><i style="--c:var(--purple)"></i></span><button class="settings" type="button" data-som aria-label="Desligar sons">⚙</button></div>
     <div class="screen-body"><h2 class="wood-title">Recados</h2><div class="paper voice-paper">
-      <div class="msg" id="recado-pai" hidden><span class="avatar" style="background:#4b8197">P</span><button class="play-btn" id="ouvir" type="button" aria-label="Ouvir recado do papai">▶</button><span class="wave"><i id="barra"></i></span><span class="count" id="contagem" aria-hidden="true"></span></div>
-      <div class="msg-gone" id="recado-ouvido" hidden>✓</div>
-      <button class="mic" id="microfone" type="button" aria-label="Gravar recado para o papai"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
-      <p class="mic-label" id="microfone-texto">Gravar para o papai</p>
+      <div class="rc-bloco">
+        <p class="rc-titulo"><span class="avatar" style="background:#4b8197">P</span>Recado do papai</p>
+        <div class="msg" id="recado-pai" hidden><button class="play-btn" id="ouvir" type="button" aria-label="Ouvir recado do papai">▶</button><span class="wave"><i id="barra"></i></span><span class="count" id="contagem" aria-hidden="true"></span></div>
+        <p class="rc-aviso" id="sem-recado-pai">📭 Nenhum recado novo</p>
+        <p class="rc-aviso rc-ok" id="recado-ouvido" hidden>✓ Você ouviu o papai!</p>
+      </div>
+      <div class="rc-bloco" id="gravacao" data-estado="inicio">
+        <p class="rc-titulo"><span class="avatar">T</span>Meu recado para o papai</p>
+        <ol class="rc-passos" aria-hidden="true">
+          <li data-p="1"><i>🎤</i><span>Gravar</span></li>
+          <li data-p="2"><i>➤</i><span>Enviar</span></li>
+          <li data-p="3"><i>👂</i><span>Papai ouviu</span></li>
+        </ol>
+        <div class="rc-acao">
+          <button class="rc-mini" id="ouvir-meu" type="button" aria-label="Ouvir o que gravei">▶</button>
+          <button class="mic" id="microfone" type="button" aria-label="Gravar recado para o papai"><svg class="ico-mic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg class="ico-parar" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="3"/></svg></button>
+          <button class="mic enviar" id="enviar" type="button" aria-label="Enviar recado para o papai"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 21 3l-7.5 18-2.7-7.3z"/></svg></button>
+        </div>
+        <div class="rc-ondas" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><b id="tempo-gravacao">0:00</b></div>
+        <p class="mic-label" id="microfone-texto" aria-live="polite"></p>
+      </div>
     </div><button class="next" id="voltar-trilha" type="button">Trilha <span aria-hidden="true">▶</span></button></div>
   </section>
 
@@ -58,7 +75,7 @@
   <script src="logica.js"></script>
   <script src="recados.js"></script>
   <script src="nuvem.js"></script>
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=15"></script>
   <script>
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
   // Pareamento (uma vez) e envio dos dados do dia ao celular do pai.
@@ -66,12 +83,26 @@
     const N = window.Nuvem, $ = s => document.querySelector(s);
     if (!N) return; // sem internet: joga normal, envia quando abrir com rede
     const mostrar = id => document.querySelectorAll('.phone').forEach(t => t.classList.toggle('active', t.id === id));
+    const CHAVE = 'sudoku-cores-theo-v2', REINICIO = 'sudoku-theo-reinicio'; // último reinício do pai já aplicado
+    const ler = () => { try { return JSON.parse(localStorage.getItem(CHAVE)) || window.Logica.estadoInicial(); } catch { return window.Logica.estadoInicial(); } };
+    // Reinício pedido pelo pai: apaga aqui o dia escolhido e os seguintes, antes de enviar (senão os dados voltariam ao servidor).
+    async function aplicarReinicio() {
+      const r = await N.reinicio();
+      if (!r || r.em === localStorage.getItem(REINICIO)) return false;
+      localStorage.setItem(CHAVE, JSON.stringify(window.Logica.reiniciar(ler(), r.etapa)));
+      localStorage.setItem(REINICIO, r.em);
+      return true;
+    }
     // Reenviar tudo é seguro (não duplica); se falhar, vai na próxima partida, ao voltar a rede ou ao abrir.
-    const enviar = () => { try { N.sincronizar(JSON.parse(localStorage.getItem('sudoku-cores-theo-v2')) || { concluidos: [] }).catch(() => {}); } catch { /* sem dados */ } };
+    const enviar = async () => {
+      try { if (await aplicarReinicio()) return location.reload(); } catch { /* sem rede: confere na próxima */ }
+      N.sincronizar(ler()).catch(() => {});
+    };
     let eu = null;
     try { eu = await N.iniciar(); } catch { return; }
     document.addEventListener('partida-salva', enviar);
     addEventListener('online', enviar);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && eu) enviar(); });
     // Aviso de recado do papai: o pedido de permissão sai no toque em "Ligar" (ou no 1º "Jogar", se pareou antes disto).
     const avisos = pedir => N.ativarAvisos(pedir).catch(() => {});
     if (eu) {
@@ -83,7 +114,12 @@
     $('#parear').addEventListener('click', async () => {
       const ok = await N.entrarFamilia($('#codigo').value).catch(() => false);
       $('#codigo-erro').hidden = ok;
-      if (ok) { enviar(); avisos(true); mostrar('tela-trilha'); }
+      if (ok) {
+        eu = N.quemSou();
+        const r = await N.reinicio().catch(() => null); // reinícios de antes do pareamento não valem para este aparelho
+        if (r) localStorage.setItem(REINICIO, r.em);
+        enviar(); avisos(true); mostrar('tela-trilha');
+      }
     });
   })();
   </script>

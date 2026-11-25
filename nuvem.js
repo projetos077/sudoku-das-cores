@@ -5,7 +5,7 @@
   'use strict';
   const URL_SB = 'https://rrsnpcfpvwtfkomhcnxq.supabase.co';
   const CHAVE = 'sb_publishable_2Cz7vcO6WmRn5LwimC6m_Q_wRqTBBYg'; // pública por natureza; quem protege é o RLS
-  const APAGAR_APOS_OUVIR_MS = 10000;
+  const APAGAR_APOS_OUVIR_MS = 15000;
 
   // Simulador (?simulador): sem comunicação; recados e dados ficam neste navegador (recados.js).
   if (/[?&]simulador\b/.test(location.search)) { window.Nuvem = null; return; }
@@ -13,7 +13,7 @@
   // Sem internet o CDN não carrega: o jogo segue, só sem recados e sem envio.
   if (!window.supabase) {
     window.Nuvem = null;
-    window.Recados = { deQuem: async () => [], podeGravar: () => false };
+    window.Recados = { deQuem: async () => [], situacao: async () => null, podeGravar: () => false, APAGAR_APOS_OUVIR_MS };
     return;
   }
 
@@ -65,8 +65,8 @@
     if (!eu || eu.papel !== 'crianca') return;
     const f = eu.familia_id;
     const lote = [...estado.concluidos, ...(estado.pacote ? [estado.pacote] : [])];
-    const partidas = lote.flatMap(d => d.partidas.map(p => ({ familia_id: f, etapa: d.dia, ordem: p.partida, tempo_ms: p.duracaoMs, erros: p.erros })));
-    const dias = estado.concluidos.map(d => ({ familia_id: f, etapa: d.dia, estrelas: d.estrelas.total }));
+    const partidas = lote.flatMap(d => d.partidas.map(p => ({ familia_id: f, etapa: d.dia, ordem: p.partida, tempo_ms: p.duracaoMs, erros: p.erros, criada_em: p.fim })));
+    const dias = estado.concluidos.map(d => ({ familia_id: f, etapa: d.dia, estrelas: d.estrelas.total, concluido_em: d.partidas[d.partidas.length - 1].fim }));
     if (partidas.length) {
       const { error } = await sb.from('partidas').upsert(partidas, { onConflict: 'familia_id,etapa,ordem', ignoreDuplicates: true });
       if (error) throw error;
@@ -77,6 +77,18 @@
     }
   }
 
+  // Pai reinicia a partir de um dia: o servidor apaga os dados e marca o reinício para o celular do Theo.
+  async function reiniciarDia(etapa) {
+    const { error } = await sb.rpc('reiniciar_dia', { p_etapa: etapa });
+    if (error) throw error;
+  }
+  // Criança: último reinício pedido pelo pai ({ etapa, em }); o app aplica se ainda não aplicou este.
+  async function reinicio() {
+    const { data, error } = await sb.from('familias').select('reinicio_etapa, reinicio_em').maybeSingle();
+    if (error) throw error;
+    return data && data.reinicio_em ? { etapa: data.reinicio_etapa, em: data.reinicio_em } : null;
+  }
+
   // Pai: painel.
   const lerPartidas = async () => (await sb.from('partidas').select('*').order('etapa').order('ordem')).data || [];
   const lerDias = async () => (await sb.from('dias').select('*').order('etapa')).data || [];
@@ -84,7 +96,7 @@
   // Recados ------------------------------------------------------------
   const deQuem = async de => (eu ? (await sb.from('recados').select('*').eq('de', papel(de)).order('criado_em')).data || [] : []);
 
-  // Toca o recado; ao terminar, marca como ouvido, conta 10 s (dá para ouvir de novo) e apaga.
+  // Toca o recado; ao terminar, marca como ouvido, conta 15 s (dá para ouvir de novo) e apaga.
   // O servidor também apaga sozinho (função limpar-recados), caso o app feche antes.
   function tocar(recado, { aoProgresso, aoContar, aoApagar }) {
     const audio = new Audio();
@@ -124,18 +136,29 @@
     const rec = new MediaRecorder(stream, tipo ? { mimeType: tipo } : {}), partes = [];
     rec.ondataavailable = e => partes.push(e.data);
     rec.start();
-    return () => new Promise((ok, erro) => {
-      rec.onstop = async () => {
+    // Parar devolve { enviar }: gravar e enviar são toques separados.
+    return () => new Promise(ok => {
+      rec.onstop = () => {
         stream.getTracks().forEach(t => t.stop());
-        const mime = (rec.mimeType || 'audio/mp4').split(';')[0];
-        const caminho = `${eu.familia_id}/${crypto.randomUUID()}.${mime === 'audio/webm' ? 'webm' : 'm4a'}`;
-        const up = await sb.storage.from('recados').upload(caminho, new Blob(partes, { type: mime }), { contentType: mime });
-        if (up.error) return erro(up.error);
-        const { error } = await sb.from('recados').insert({ familia_id: eu.familia_id, de: papel(de), caminho });
-        error ? erro(error) : ok();
+        const mime = (rec.mimeType || 'audio/mp4').split(';')[0], blob = new Blob(partes, { type: mime });
+        ok({ blob, enviar: async () => {
+          const caminho = `${eu.familia_id}/${crypto.randomUUID()}.${mime === 'audio/webm' ? 'webm' : 'm4a'}`;
+          const up = await sb.storage.from('recados').upload(caminho, blob, { contentType: mime });
+          if (up.error) throw up.error;
+          const { data, error } = await sb.from('recados').insert({ familia_id: eu.familia_id, de: papel(de), caminho }).select('id').single();
+          if (error) throw error;
+          return data.id;
+        } });
       };
       rec.stop();
     });
+  }
+
+  // Recado enviado: 'enviado' (ainda não ouvido) ou 'ouvido' (ouvido, ou já apagado depois de ouvido).
+  async function situacao(id) {
+    const { data, error } = await sb.from('recados').select('ouvido_em').eq('id', id).maybeSingle();
+    if (error) throw error;
+    return data && !data.ouvido_em ? 'enviado' : 'ouvido';
   }
 
   const podeGravar = () => !!(eu && navigator.mediaDevices && window.MediaRecorder);
@@ -168,7 +191,7 @@
 
   window.Nuvem = {
     iniciar, quemSou: () => eu, criarFamilia, novoCodigo, criancaEntrou, entrarFamilia,
-    sincronizar, lerPartidas, lerDias, ouvir, podeAvisar, ativarAvisos,
+    sincronizar, lerPartidas, lerDias, ouvir, podeAvisar, ativarAvisos, reiniciarDia, reinicio,
   };
-  window.Recados = { deQuem, tocar, gravar, podeGravar };
+  window.Recados = { deQuem, tocar, gravar, situacao, podeGravar, APAGAR_APOS_OUVIR_MS };
 })();
