@@ -79,15 +79,9 @@
     const n = estado.pacote.partidas.length + 1, indice = estado.pacote.jogos[n - 1], j = JOGOS[indice];
     jogo = { dia: sit.dia, n, indice, pistas: j.puzzle.slice(), solucao: j.solution.slice(), vals: j.puzzle.slice(), erros: 0, cor: null, sel: null, feitas: new Set(), moedas: 0, inicio: new Date().toISOString(), gastoMs: 0, desde: null, fimMs: null };
     tela.dataset.set = L.estiloDoJogo(sit.dia, n);
-    $('#nome-estilo').textContent = NOMES[tela.dataset.set];
-    $('#selo').replaceChildren(peca(1));
-    $('#amigo').replaceChildren(peca(2));
-    const placa = $('#placa'); placa.classList.remove('balanca'); void placa.offsetWidth; placa.classList.add('balanca');
     paleta.forEach((b, k) => { b.replaceChildren(peca(k)); b.firstElementChild.classList.replace('piece', 'pal-piece'); b.setAttribute('aria-pressed', 'false'); });
     tela.querySelector('.chest-coins').style.setProperty('--h', '0px');
-    // Sementinhas no lugar do "1/6": douradas as feitas, pulsando a atual.
-    $('#etapa').replaceChildren(...Array.from({ length: L.JOGOS_POR_DIA }, (_, k) => { const li = document.createElement('li'); if (k < n - 1) li.className = 'feita'; if (k === n - 1) li.className = 'agora'; return li; }));
-    $('#etapa').setAttribute('aria-label', `Jogo ${n} de ${L.JOGOS_POR_DIA}`);
+    $('#etapa').textContent = `${n}/${L.JOGOS_POR_DIA}`;
     mostrar('tela-partida');
     pintar();
     retomar();
@@ -120,9 +114,8 @@
     tabuleiro.parentElement.append(s); setTimeout(() => s.remove(), 1000);
   }
   const NOTAS = [523, 659, 784, 988];
-  const NOMES = { frutas: 'Feirinha de frutas', bichos: 'Amigos da trilha', tesouros: 'Caça ao tesouro', dinos: 'Ovos de dinossauro', carinhas: 'Bolinhas cantoras' };
-  // Theo no palco: pula nas linhas completas, balança no erro, festeja no fim.
-  function theo(reacao) { ['#theo', '#amigo'].forEach(id => { const t = $(id); t.classList.remove('yay', 'oops', 'festa'); void t.offsetWidth; t.classList.add(reacao); }); }
+  // Theo no topo: pula nas linhas certas, balança no erro, festeja no fim.
+  function theo(r) { const t = $('#theo'); if (!t) return; t.classList.remove('yay', 'oops', 'festa'); void t.offsetWidth; t.classList.add(r); }
 
   function colocar(i) {
     if (jogo.terminado || jogo.pistas[i] !== -1 || jogo.cor === null) return;

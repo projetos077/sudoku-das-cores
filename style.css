@@ -165,3 +165,49 @@ body { overflow:hidden; -webkit-tap-highlight-color:transparent; user-select:non
 .play-paper { padding-bottom:16px }
 @media (prefers-reduced-motion:reduce) { .board.complete,.board.complete .piece,.star-pop { animation:none } }
 
+/* Partida ampliada (25/11/2026): fundo da clareira, tabuleiro na largura toda e controles maiores */
+.game-screen { background-image:url("ilustracoes/fundo-partida-v2.jpg"); background-position:center }
+.play-screen .screen-body { justify-content:center; padding:54px 5px 12px }
+.play-screen .wood-title { margin-bottom:9px }
+.play-paper { padding:8px 6px 14px }
+.game-screen .board { width:100%; max-width:440px; border-width:5px; border-radius:16px }
+.game-screen .piece { width:86%; height:86% }
+.game-screen .palette { gap:10px; margin:14px 0 0 }
+.game-screen .palette button,.game-screen .eraser { width:min(16vw,66px); height:min(16vw,66px); padding:6px; box-shadow:0 4px 0 #8c5730 }
+.game-screen .eraser { padding:9px }
+
+/* Contorno esticado (25/11/2026): o papel ocupa a altura livre; SUDOKU no alto, dentro dele */
+#tela-partida .screen-body { justify-content:flex-end; padding:54px 5px 12px }
+#tela-partida .play-paper { flex:0 1 auto; min-height:0; display:flex; flex-direction:column; align-items:stretch }
+.sudoku-titulo { margin:2px 0 8px; text-align:center; font-size:clamp(30px,10vw,44px); line-height:1; letter-spacing:3px; font-weight:1000 }
+.sudoku-titulo span { display:inline-block; color:var(--c); -webkit-text-stroke:2px #173b54; paint-order:stroke fill; text-shadow:0 3px 0 #173b54 }
+.sudoku-titulo span:nth-child(odd) { transform:rotate(-5deg) } .sudoku-titulo span:nth-child(even) { transform:translateY(2px) rotate(4deg) }
+#tela-partida .board { flex:none; min-height:0; width:100%; max-width:none; aspect-ratio:1; grid-template-rows:repeat(4,1fr) }
+#tela-partida .palette { align-self:center }
+
+/* Theo no topo da partida, de busto, reagindo às jogadas */
+.theo-topo { position:relative; flex:1; min-height:0; width:100%; overflow:hidden; display:flex; justify-content:center; align-items:flex-start; margin-bottom:-14px }
+.theo-topo img { height:185%; max-height:340px; transform-origin:50% 70%; filter:drop-shadow(0 5px 4px #0005); animation:theoRespira 2.8s ease-in-out infinite }
+@keyframes theoRespira { 50% { transform:translateY(2px) scale(1.01) } }
+.theo-topo img.yay { animation:theoYay .38s ease-out 2 alternate }
+@keyframes theoYay { to { transform:translateY(-10px) rotate(-5deg) scale(1.04) } }
+.theo-topo img.oops { animation:theoOops .5s ease-in-out }
+@keyframes theoOops { 25% { transform:rotate(-7deg) } 75% { transform:rotate(6deg) } }
+.theo-topo img.festa { animation:theoFesta .45s ease-out 4 alternate }
+@keyframes theoFesta { to { transform:translateY(-14px) rotate(4deg) scale(1.08) } }
+#tela-partida .wood-title { position:relative; z-index:2 }
+@media (max-height:620px) { .theo-topo { display:none } }
+@media (prefers-reduced-motion:reduce) { .theo-topo img { animation:none!important } }
+/* Numeração do jogo (1/6) em plaquinha ao lado do Theo */
+#tela-partida .step { top:auto; bottom:calc(100% - 132px); left:auto; right:7%; transform:rotate(6deg); padding:7px 14px 6px; border-width:3px; border-radius:8px 8px 12px 12px; font-size:24px; line-height:1; box-shadow:0 4px 0 #5e341e,0 8px 14px #0004 }
+#tela-partida .step::before { content:""; position:absolute; left:50%; bottom:100%; width:3px; height:26px; margin-left:-1.5px; background:#7a5530 }
+
+/* Theo menor e conjunto centralizado na tela */
+#tela-partida .screen-body { justify-content:center }
+#tela-partida .theo-topo { flex:none; height:min(118px,15svh); margin-bottom:-10px }
+#tela-partida .theo-topo img { height:200% }
+#tela-partida .theo-topo .step { position:absolute; top:22px; bottom:auto; left:auto; right:12%; z-index:2 }
+#tela-partida .theo-topo .step::before { height:20px }
+
+/* Theo encostado no topo; tabuleiro sobe */
+#tela-partida .screen-body { justify-content:flex-start; padding-top:4px }
